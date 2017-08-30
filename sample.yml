@@ -1,0 +1,29 @@
+server:
+  host: 0.0.0.0
+  port: 9999
+
+validators:
+  - /docker:
+      headers:
+        X-TEST: '^abcd$'
+        X-Optional: '^[0-9]*$'
+      body:
+        callback_url: '^https://.+/hook/.+'
+        repository:
+          repo_name: '^[a-z0-9_\-]+/[a-z0-9_\-]+$'
+          is_trusted: '(?i)(true|false)'
+          optional: '^.*$'
+
+  - /body:
+      body:
+        callback_url: '^https://.+/hook/.+'
+        repository:
+          repo_name: '^[a-z0-9_\-]+/[a-z0-9_\-]+$'
+          is_trusted: '(?i)(true|false)'
+          optional: '^.*$'
+
+  - /head:
+      headers:
+        X-TEST: '^abcd$'
+        X-Optional: '^[0-9]*$'
+
