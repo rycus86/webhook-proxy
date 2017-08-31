@@ -1,7 +1,8 @@
-from server import Server
-
 import sys
+
 import yaml
+
+from server import Server
 
 
 def parse_settings(source='server.yml'):
@@ -10,12 +11,7 @@ def parse_settings(source='server.yml'):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        settings = parse_settings(sys.argv[1])
+    settings = parse_settings(sys.argv[1]) if len(sys.argv) == 2 else parse_settings()
 
-    else:
-        settings = parse_settings()
-
-    server = Server(validators=settings.get('validators'), **settings.get('server', dict()))
+    server = Server(endpoint_configurations=settings.get('endpoints'), **settings.get('server', dict()))
     server.run()
-

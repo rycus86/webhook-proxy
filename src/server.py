@@ -1,42 +1,24 @@
-from flask import Flask, request
-from validator import Validator
+from flask import Flask
+
+from endpoints import Endpoint
 
 
 class Server(object):
-
-    def __init__(self, host='127.0.0.1', port=5000, validators=None):
+    def __init__(self, endpoint_configurations, host='127.0.0.1', port=5000):
         self.host = host
         self.port = port
 
-        if validators:
-            self.validators = {route: Validator(validator) for config in validators for route, validator in config.items()}
+        if not endpoint_configurations:
+            raise Exception('No endpoints defined')
 
-        else:
-            self.validators = {'/': Validator()}
+        endpoints = [Endpoint(route, settings)
+                     for config in endpoint_configurations
+                     for route, settings in config.items()]
+
+        self.app = Flask(__name__)
+
+        for endpoint in endpoints:
+            endpoint.setup(self.app)
 
     def run(self):
-        app = Flask(__name__)
-        
-        def _make_response(status, message):
-            return message, status, {'Content-Type': 'text/plain'}
-
-        for route, validator in self.validators.items():
-            @app.route(route, endpoint=route[1:], methods=[validator.method])
-            def receive(**kwargs):
-                validator = self.validators.get(request.path)
-
-                if not validator:
-                    return _make_response(404, 'Not found')  # should not happen
-                
-                if not request.json:
-                    return _make_response(400, 'No payload')
-
-                if not validator.accept(request):
-                    return _make_response(409, 'Invalid payload')
-            
-                # TODO run actions
-
-                return _make_response(200, 'OK\n')
-
-        app.run(host=self.host, port=self.port)
-
+        self.app.run(host=self.host, port=self.port)
