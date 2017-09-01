@@ -3,6 +3,17 @@ server:
   port: '9999'
 
 endpoints:
+  - /echo:
+      method: 'POST'
+
+      actions:
+        - log:
+            message: 'Incoming request on {{ request.path }}:
+request headers:
+{{ request.headers }}
+request payload:
+{{ request.json }}'
+
   - /docker:
       method: 'POST'
 
@@ -13,3 +24,16 @@ endpoints:
         callback_url: 'https://.+'
         repository:
           repo_name: '^[0-9a-z_\\-]+/[0-9a-z_\\-]+$'
+
+      actions:
+        - log:
+            message: '[{{ datetime }}] Processing {{ request.method }} {{ request.path }} ...'
+        - http:
+            target: 'http://localhost:9999/echo'
+            method: 'POST'
+            headers:
+              Content-Type: 'application/json'
+              X-From: 'webhook-proxy'
+              X-Source: '{{ request.path }}'
+            body: '{ "repo": "{{ request.json.repository.repo_name }}" }'
+

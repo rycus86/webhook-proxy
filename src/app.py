@@ -15,3 +15,4 @@ if __name__ == '__main__':
 
     server = Server(endpoint_configurations=settings.get('endpoints'), **settings.get('server', dict()))
     server.run()
+

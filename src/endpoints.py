@@ -1,22 +1,30 @@
 from __future__ import print_function
 
 import re
+import traceback
 
 from flask import request
+
+from actions import Action
+from util import ConfigurationException
 
 
 class Endpoint(object):
     def __init__(self, route, settings):
         if not route:
-            raise Exception('An endpoint must have its route defined')
+            raise ConfigurationException('An endpoint must have its route defined')
 
         if not settings:
-            raise Exception('An endpoint must have settings')
+            raise ConfigurationException('An endpoint must have settings')
 
         self._route = route
         self._method = settings.get('method', 'POST')
         self._headers = settings.get('headers', dict())
         self._body = settings.get('body', dict())
+
+        self._actions = list(Action.create(name, **(action_settings if action_settings else dict()))
+                             for action_item in settings.get('actions', list())
+                             for name, action_settings in action_item.items())
 
     def setup(self, app):
         @app.route(self._route, endpoint=self._route[1:], methods=[self._method])
@@ -26,8 +34,14 @@ class Endpoint(object):
 
             if not self.accept():
                 return self._make_response(409, 'Invalid payload')
+            
+            try:
+                for action in self._actions:
+                    action.run()
 
-            # TODO run actions
+            except:
+                traceback.print_exc()
+                return self._make_response(500, 'Internal Server Error')
 
             return self._make_response(200, 'OK\n')
 
@@ -52,7 +66,7 @@ class Endpoint(object):
 
     def _accept_body(self, data, rules, prefix=''):
         for key, rule in rules.items():
-            value = data.get(key, '')
+            value = data.get(key, dict() if isinstance(rule, dict) else '')
 
             if isinstance(value, list):
                 for idx, item in enumerate(value):

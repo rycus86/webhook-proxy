@@ -1,6 +1,7 @@
 from flask import Flask
 
 from endpoints import Endpoint
+from util import ConfigurationException
 
 
 class Server(object):
@@ -9,7 +10,7 @@ class Server(object):
         self.port = port
 
         if not endpoint_configurations:
-            raise Exception('No endpoints defined')
+            raise ConfigurationException('No endpoints defined')
 
         endpoints = [Endpoint(route, settings)
                      for config in endpoint_configurations
