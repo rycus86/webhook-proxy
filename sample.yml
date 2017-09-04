@@ -7,12 +7,21 @@ endpoints:
       method: 'POST'
 
       actions:
+        - docker:
+            containers:
+              list:
+        - docker:
+            containers:
+              run:
+                image: alpine
+                command: 'echo "Hello from a new alpine container"'
+                remove: true
         - log:
             message: 'Incoming request on {{ request.path }}:
-request headers:
-{{ request.headers }}
-request payload:
-{{ request.json }}'
+                      request headers:
+                      {{ request.headers }}
+                      request payload:
+                      {{ request.json }}'
 
   - /docker:
       method: 'POST'
@@ -36,4 +45,6 @@ request payload:
               X-From: 'webhook-proxy'
               X-Source: '{{ request.path }}'
             body: '{ "repo": "{{ request.json.repository.repo_name }}" }'
+        - log:
+            message: '[{{ datetime }}] Finished {{ request.method }} {{ request.path }}'
 

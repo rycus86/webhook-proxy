@@ -22,4 +22,4 @@ class Server(object):
             endpoint.setup(self.app)
 
     def run(self):
-        self.app.run(host=self.host, port=self.port)
+        self.app.run(host=self.host, port=self.port, threaded=True)

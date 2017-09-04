@@ -1,8 +1,42 @@
+from __future__ import print_function
+
+import os
+import time
+import traceback
+
+from flask import request
+from jinja2 import Template
+
 from util import ActionInvocationException
 
+
+def _safe_import():
+    class SafeImportContext(object):
+        def __enter__(self):
+            pass
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if exc_type is ImportError:
+                error_file = traceback.extract_tb(exc_tb)[1][0]
+                name, _ = os.path.splitext(os.path.basename(error_file))
+                
+                if name.startswith('action_'):
+                    name = name[len('action_'):]
+
+                print('The "%s" action is not available' % name)
+
+                return True
+
+    return SafeImportContext()
+
+
 def _register_available_actions():
-    from log import LogAction
-    from http import HttpAction
+    from action_log import LogAction
+
+    with _safe_import():
+        from action_http import HttpAction
+    with _safe_import():
+        from action_docker import DockerAction
 
 
 class Action(object):
@@ -18,6 +52,10 @@ class Action(object):
 
     def _run(self):
         raise ActionInvocationException('%s.run not implemented' % type(self).__name__)
+
+    def _render_with_template(self, template):
+        template = Template(template)
+        return template.render(request=request, timestamp=time.time(), datetime=time.ctime())
 
     @classmethod
     def register(cls, name, action_type):
