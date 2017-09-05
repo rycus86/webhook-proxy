@@ -53,9 +53,9 @@ class Action(object):
     def _run(self):
         raise ActionInvocationException('%s.run not implemented' % type(self).__name__)
 
-    def _render_with_template(self, template):
+    def _render_with_template(self, template, **kwargs):
         template = Template(template)
-        return template.render(request=request, timestamp=time.time(), datetime=time.ctime())
+        return template.render(request=request, timestamp=time.time(), datetime=time.ctime(), **kwargs)
 
     @classmethod
     def register(cls, name, action_type):

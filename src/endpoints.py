@@ -29,7 +29,6 @@ class Endpoint(object):
     def setup(self, app):
         @app.route(self._route, endpoint=self._route[1:], methods=[self._method])
         def receive():
-            print('doing stuff')
             if not request.json:
                 return self._make_response(400, 'No payload')
 

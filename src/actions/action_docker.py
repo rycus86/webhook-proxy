@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import docker
 
 from actions import action, Action
@@ -8,23 +10,22 @@ from util import ConfigurationException
 class DockerAction(Action):
     client = docker.DockerClient()
 
-    def __init__(self, **apis):
-        if len(apis) != 1:
-            raise ConfigurationException('The "docker" action has to have one API')
+    def __init__(self, output='{{ result }}', **invocations):
+        if len(invocations) != 1:
+            raise ConfigurationException('The "docker" action has to have one invocation')
 
-        api = next(key for key in apis)
+        self.output_format = output
+        self.command, self.arguments = self._split_invocation(invocations, self.client)
 
-        if len(apis[api]) != 1:
-            raise ConfigurationException('The "docker" action has to have one command for the API')
+    def _split_invocation(self, invocation, target):
+        if invocation is None or not(any(key.startswith('$') for key in invocation)):
+            return target, invocation if invocation else dict()
 
-        prop = next(key for key in apis[api])
-
-        self.command = getattr(getattr(self.client, api), prop)
-
-        self.arguments = apis[api][prop]
-        if self.arguments is None:
-            self.arguments = dict()
+        prop, value = next(iter(invocation.items()))
+        
+        return self._split_invocation(value, getattr(target, prop[1:]))
 
     def _run(self):
-        print 'The whale says:', self.command(**self.arguments)
+        result = self.command(**self.arguments)
+        print(self._render_with_template(self.output_format, result=result))
 

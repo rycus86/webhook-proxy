@@ -8,11 +8,17 @@ endpoints:
 
       actions:
         - docker:
-            containers:
-              list:
+            $info:
+            output: 'Docker version: {{ result.ServerVersion }} on {{ result.OperatingSystem }}'
         - docker:
-            containers:
-              run:
+            $containers:
+              $list:
+            output: '{% for container in result %}
+                     Container: {{ container.name }} @{{ container.short_id }}
+                     {% endfor %}'
+        - docker:
+            $containers:
+              $run:
                 image: alpine
                 command: 'echo "Hello from a new alpine container"'
                 remove: true
