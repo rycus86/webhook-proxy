@@ -10,10 +10,11 @@ from util import ConfigurationException
 class DockerAction(Action):
     client = docker.DockerClient()
 
-    def __init__(self, output='{{ result }}', **invocations):
+    def __init__(self, output='{{ result }}', execute=None, **invocations):
         if len(invocations) != 1:
             raise ConfigurationException('The "docker" action has to have one invocation')
 
+        self.execution = execute
         self.output_format = output
         self.command, self.arguments = self._split_invocation(invocations, self.client)
 
@@ -27,5 +28,10 @@ class DockerAction(Action):
 
     def _run(self):
         result = self.command(**self.arguments)
-        print(self._render_with_template(self.output_format, result=result))
+        
+        if self.execution:
+            self._render_with_template(self.execution, result=result)
+
+        else:
+            print(self._render_with_template(self.output_format, result=result))
 

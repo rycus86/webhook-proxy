@@ -7,6 +7,17 @@ endpoints:
       method: 'POST'
 
       actions:
+        - execute:
+            command: 'echo "Hello from the shell"'
+        - docker:
+            $containers:
+              $list:
+                filters:
+                  name: 'test-restart'
+            execute: '{% for container in result %}
+                      Restarting {{ container.name }} @ {{ container.short_id }}
+                      {{ container.restart() }}
+                      {% endfor %}'
         - docker:
             $info:
             output: 'Docker version: {{ result.ServerVersion }} on {{ result.OperatingSystem }}'

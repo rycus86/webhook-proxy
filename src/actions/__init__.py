@@ -32,6 +32,7 @@ def _safe_import():
 
 def _register_available_actions():
     from action_log import LogAction
+    from action_execute import ExecuteAction
 
     with _safe_import():
         from action_http import HttpAction
