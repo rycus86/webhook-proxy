@@ -7,6 +7,48 @@ endpoints:
       method: 'POST'
 
       actions:
+        - log:
+            message: 'Incoming request on {{ request.path }}:
+                      request headers:
+                      {{ request.headers }}
+                      request payload:
+                      {{ request.json }}'
+
+  - /test:
+      method: 'POST'
+
+      actions:
+        - log:
+            message: 'Running tests at {{ timestamp }} ...'
+        - docker-compose:
+            project_name: 'abc'
+            directory: '/tmp/compose'
+            $project:
+              $get_services:
+            output: |
+              Compose:
+              {% for service in result %}
+               - service: {{ service.name }}
+              {% endfor %}
+        - docker-compose:
+            project_name: 'abc'
+            directory: '/tmp/compose'
+            $project:
+              $up:
+                detached: true
+            output: |
+              Containers started:
+              {% for container in result %}
+              - {{ container.name }}
+              {% endfor %}
+        - docker-compose:
+            project_name: 'abc'
+            directory: '/tmp/compose'
+            $project:
+              $down:
+                remove_image_type: false
+                include_volumes: true
+            output: 'Compose project stopped and removed'
         - execute:
             command: 'echo "Hello from the shell"'
         - docker:
@@ -34,11 +76,7 @@ endpoints:
                 command: 'echo "Hello from a new alpine container"'
                 remove: true
         - log:
-            message: 'Incoming request on {{ request.path }}:
-                      request headers:
-                      {{ request.headers }}
-                      request payload:
-                      {{ request.json }}'
+            message: 'Tests have finished at {{ timestamp }}'
 
   - /docker:
       method: 'POST'

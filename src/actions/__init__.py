@@ -7,7 +7,7 @@ import traceback
 from flask import request
 from jinja2 import Template
 
-from util import ActionInvocationException
+from util import ActionInvocationException, ConfigurationException
 
 
 def _safe_import():
@@ -21,7 +21,7 @@ def _safe_import():
                 name, _ = os.path.splitext(os.path.basename(error_file))
                 
                 if name.startswith('action_'):
-                    name = name[len('action_'):]
+                    name = name[len('action_'):].replace('_', '-')
 
                 print('The "%s" action is not available' % name)
 
@@ -38,6 +38,8 @@ def _register_available_actions():
         from action_http import HttpAction
     with _safe_import():
         from action_docker import DockerAction
+    with _safe_import():
+        from action_docker_compose import DockerComposeAction
 
 
 class Action(object):
@@ -65,10 +67,16 @@ class Action(object):
     @classmethod
     def create(cls, name, **settings):
         if name not in cls._registered_actions:
-            raise ActionInvocationException('Unkown action: %s (registered: %s)' %
-                                            (name, cls._registered_actions.keys()))
+            raise ConfigurationException('Unkown action: %s (registered: %s)' %
+                                         (name, cls._registered_actions.keys()))
         
-        return cls._registered_actions[name](**settings)
+        try:
+            return cls._registered_actions[name](**settings)
+
+        except TypeError as ex:
+            raise ConfigurationException('Failed to create action: %s (settings = %s)\n'
+                                         '  Reason (%s): %s' % 
+                                         (name, settings, type(ex).__name__, ex))
 
 
 def action(name):
