@@ -1,0 +1,56 @@
+language: python
+python:
+  - '2.7'
+  - '3.4'
+  - '3.6'
+sudo:
+  - required
+services:
+  - docker
+install:
+  - pip install -r requirements.txt
+  - pip install -r docker-requirements.txt
+  - pip install coveralls
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+script:
+  # enable other architectures
+  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+  # python tests
+  - PYTHONPATH=src python -m coverage run --branch --source=src -m unittest discover -s tests -v
+  # build docker image
+  - >
+    if [[ "$(python --version 2>&1)" = *2.7* ]]; then
+      docker build -t webhook-proxy:$DOCKER_TAG -f $DOCKERFILE .
+    fi
+after_success:
+  # push docker image
+  - >
+    if [[ "$(python --version 2>&1)" = *2.7* ]] && [ "$DOCKER_PUSH" != "no" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
+      docker login -u="rycus86" -p="$DOCKER_PASSWORD"
+      docker tag webhook-proxy:$DOCKER_TAG rycus86/webhook-proxy:$DOCKER_TAG
+      docker push rycus86/webhook-proxy:$DOCKER_TAG
+    else
+      echo 'Not pushing to Docker Hub'
+    fi
+  # coverage reports
+  - coveralls
+  - python -m coverage report -m
+  - python -m coverage xml
+  - >
+    if [ "$SKIP_CC" != "true" ]; then
+      ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+      echo 'Test report submitted'
+    else
+      echo 'Not submitting test report'
+    fi
+env:
+  matrix:
+  - DOCKER_TAG=latest          DOCKERFILE=Dockerfile                 DOCKER_PUSH=no
+  - DOCKER_TAG=armhf           DOCKERFILE=Dockerfile.armhf           SKIP_CC=true
+  - DOCKER_TAG=aarch64         DOCKERFILE=Dockerfile.aarch64         SKIP_CC=true
+  - DOCKER_TAG=docker          DOCKERFILE=Dockerfile-docker          SKIP_CC=true
+  - DOCKER_TAG=armhf-docker    DOCKERFILE=Dockerfile-docker.armhf    SKIP_CC=true
+  - DOCKER_TAG=aarch64-docker  DOCKERFILE=Dockerfile-docker.aarch64  SKIP_CC=true
