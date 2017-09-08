@@ -1,6 +1,12 @@
 import json
 import threading
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+
+import six
+
+if six.PY2:
+    from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+else:
+    from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from unittest_helper import ActionTestBase
 
@@ -29,7 +35,12 @@ class HttpActionTest(ActionTestBase):
                 if content_length and \
                                 self.headers.get('Content-Type', 'application/json') == 'application/json':
 
-                    posted = json.loads(self.rfile.read(content_length))
+                    payload = self.rfile.read(content_length)
+
+                    if not isinstance(payload, str) and hasattr(payload, 'decode'):
+                        payload = payload.decode()
+
+                    posted = json.loads(payload)
 
                 else:
                     posted = dict()
@@ -42,20 +53,20 @@ class HttpActionTest(ActionTestBase):
 
                 self.end_headers()
 
-                self.wfile.write('Test finished\n')
+                self.wfile.write(six.b('Test finished\n'))
 
-                self.wfile.write('uri=%s\n' % self.path)
-                self.wfile.write('method=%s\n' % self.command)
+                self.wfile.write(six.b('uri=%s\n' % self.path))
+                self.wfile.write(six.b('method=%s\n' % self.command))
 
                 for key, value in self.headers.items():
-                    self.wfile.write('H %s=%s\n' % (key, value))
+                    self.wfile.write(six.b('H %s=%s\n' % (key.lower(), value)))
 
                 for key, value in posted.items():
                     if isinstance(value, dict):
-                        self.wfile.write('B %s=%s' % (key, json.dumps(value)))
+                        self.wfile.write(six.b('B %s=%s' % (key, json.dumps(value))))
 
                     else:
-                        self.wfile.write('B %s=%s\n' % (key, value))
+                        self.wfile.write(six.b('B %s=%s\n' % (key, value)))
 
         self.http_server = HTTPServer(('127.0.0.1', 0), Handler)
 
@@ -131,7 +142,7 @@ class HttpActionTest(ActionTestBase):
         output = self._invoke_http(
             output='HTTP::{{ response.status_code }}')
 
-        self.assertEquals(output, 'HTTP::200')
+        self.assertEqual(output, 'HTTP::200')
 
     def test_content_length_header(self):
         message = 'Hello there!'

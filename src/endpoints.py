@@ -3,6 +3,7 @@ from __future__ import print_function
 import re
 import traceback
 
+import six
 from flask import request
 
 from actions import Action
@@ -84,7 +85,7 @@ class Endpoint(object):
             if not self._accept_body(value, rule, property_path):
                 return False
 
-        elif not isinstance(rule, (str, unicode)) or not re.match(rule, str(value)):
+        elif not isinstance(rule, six.string_types) or not re.match(rule, str(value)):
             print('Failed to validate "%s": "%s" does not match "%s"' %
                   (property_path[1:], value, rule))
             return False

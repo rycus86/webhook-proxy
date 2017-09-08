@@ -19,7 +19,7 @@ def capture_stdout(echo=False):
                 _original_stdout.write(line)
 
         def dumps(self):
-            return '\n'.join(line for line in self.lines if line)
+            return '\n'.join(str(line.strip()) for line in self.lines if line)
 
     class CapturedContext(object):
         def __enter__(self):

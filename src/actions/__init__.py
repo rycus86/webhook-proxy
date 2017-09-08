@@ -31,15 +31,15 @@ def _safe_import():
 
 
 def _register_available_actions():
-    from action_log import LogAction
-    from action_execute import ExecuteAction
+    from actions.action_log import LogAction
+    from actions.action_execute import ExecuteAction
 
     with _safe_import():
-        from action_http import HttpAction
+        from actions.action_http import HttpAction
     with _safe_import():
-        from action_docker import DockerAction
+        from actions.action_docker import DockerAction
     with _safe_import():
-        from action_docker_compose import DockerComposeAction
+        from actions.action_docker_compose import DockerComposeAction
 
 
 class Action(object):

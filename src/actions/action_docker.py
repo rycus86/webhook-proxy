@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import docker
+import six
 
 from actions import action, Action
 from util import ConfigurationException
@@ -33,6 +34,9 @@ class DockerAction(Action):
 
         result = self.command(**arguments)
 
+        if not isinstance(result, str) and hasattr(result, 'decode'):
+            result = result.decode()
+
         print(self._render_with_template(self.output_format, result=result))
 
     def _process_arguments(self, current):
@@ -40,7 +44,7 @@ class DockerAction(Action):
             if isinstance(value, dict):
                 current[key] = self._process_arguments(value.copy())
 
-            elif isinstance(value, (str, unicode)):
+            elif isinstance(value, six.string_types):
                 current[key] = self._render_with_template(value)
 
         return current

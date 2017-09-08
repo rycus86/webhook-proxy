@@ -4,8 +4,8 @@ from compose.config.config import ConfigFile, ConfigDetails
 from compose.config.config import load as load_config
 from compose.project import Project
 
-from action_docker import DockerAction
 from actions import action
+from actions.action_docker import DockerAction
 
 
 @action('docker-compose')

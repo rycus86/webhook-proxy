@@ -28,4 +28,7 @@ class ExecuteAction(Action):
         else:
             output = invoke_command(self.command)
 
+        if not isinstance(output, str) and hasattr(output, 'decode'):
+            output = output.decode()
+
         print(self._render_with_template(self.output_format, result=output))
