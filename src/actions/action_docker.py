@@ -26,7 +26,7 @@ class DockerAction(Action):
         return self._split_invocation(value, getattr(target, prop[1:]))
 
     def _run(self):
-        arguments = self._process_arguments(dict(self.arguments))
+        arguments = self._process_arguments(self.arguments.copy())
 
         result = self.command(**arguments)
         
@@ -35,7 +35,7 @@ class DockerAction(Action):
     def _process_arguments(self, current):
         for key, value in current.items():
             if isinstance(value, dict):
-                self._process_arguments(value)
+                current[key] = self._process_arguments(value.copy())
 
             elif isinstance(value, (str, unicode)):
                 current[key] = self._render_with_template(value)

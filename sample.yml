@@ -56,10 +56,11 @@ endpoints:
               $list:
                 filters:
                   name: '{{ request.json.name }}'
-            output: 'Containers matching "{{ request.json.name }}":
-                     {% for container in result %}
-                     - {{ container.name }} @ {{ container.short_id }}
-                     {% endfor %}'
+            output: >
+                 Containers matching "{{ request.json.name }}":
+                 {% for container in result %}
+                  - {{ container.name }} @ {{ container.short_id }}
+                 {% endfor %}
         - docker:
             $info:
             output: 'Docker version: {{ result.ServerVersion }} on {{ result.OperatingSystem }}'

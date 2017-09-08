@@ -50,8 +50,9 @@ class Action(object):
             return self._run()
 
         except Exception as ex:
-            raise ActionInvocationException('Failed to invoke %s.run: %s' %
-                                            (type(self).__name__, ex), ex)
+            raise ActionInvocationException('Failed to invoke %s.run:\n'
+                                            '  Reason (%s): %s' % 
+                                            (type(self).__name__, type(ex).__name__, ex))
 
     def _run(self):
         raise ActionInvocationException('%s.run not implemented' % type(self).__name__)
@@ -73,7 +74,7 @@ class Action(object):
         try:
             return cls._registered_actions[name](**settings)
 
-        except TypeError as ex:
+        except Exception as ex:
             raise ConfigurationException('Failed to create action: %s (settings = %s)\n'
                                          '  Reason (%s): %s' % 
                                          (name, settings, type(ex).__name__, ex))
