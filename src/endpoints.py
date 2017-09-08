@@ -34,7 +34,7 @@ class Endpoint(object):
 
             if not self.accept():
                 return self._make_response(409, 'Invalid payload')
-            
+
             try:
                 for action in self._actions:
                     action.run()

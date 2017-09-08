@@ -1,6 +1,4 @@
-from unittest_helper import capture_stdout, ActionTestBase
-
-from server import Server, ConfigurationException
+from unittest_helper import ActionTestBase
 
 
 class ExecuteActionTest(ActionTestBase):
@@ -31,3 +29,9 @@ class ExecuteActionTest(ActionTestBase):
         self.assertIn(' usr', output)
         self.assertIn(' var', output)
 
+    def test_custom_shell_command(self):
+        output = self._invoke({'execute': {'command': ['ls', '-l', '/'], 'shell': ['bash', '-c']}})
+
+        self.assertIn(' bin', output)
+        self.assertIn(' usr', output)
+        self.assertIn(' var', output)

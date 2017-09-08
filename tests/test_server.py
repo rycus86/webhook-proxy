@@ -169,10 +169,9 @@ class ServerTest(unittest.TestCase):
         self.assertRaises(ConfigurationException, Server, list())
 
     def test_missing_endpoint_route_throws_exception(self):
-        self.assertRaises(ConfigurationException, Server, [{None:{'method':'GET'}}])
-        self.assertRaises(ConfigurationException, Server, [{'':{'method':'GET'}}])
+        self.assertRaises(ConfigurationException, Server, [{None: {'method': 'GET'}}])
+        self.assertRaises(ConfigurationException, Server, [{'': {'method': 'GET'}}])
 
     def test_missing_endpoint_settings_throws_exception(self):
-        self.assertRaises(ConfigurationException, Server, [{'/test':None}])
-        self.assertRaises(ConfigurationException, Server, [{'/test':{}}])
-
+        self.assertRaises(ConfigurationException, Server, [{'/test': None}])
+        self.assertRaises(ConfigurationException, Server, [{'/test': {}}])

@@ -5,7 +5,7 @@ from actions import action, Action
 
 @action('http')
 class HttpAction(Action):
-    def __init__(self, target, method='POST', headers=None, body=None, 
+    def __init__(self, target, method='POST', headers=None, body=None,
                  output='HTTP {{ response.status_code }} : {{ response.content }}'):
 
         self.target = target
@@ -16,9 +16,9 @@ class HttpAction(Action):
 
     def _run(self):
         headers = self._headers.copy()
-        
+
         if self.body and 'Content-Length' not in headers:
-            headers['Content-Length'] = len(self.body)
+            headers['Content-Length'] = str(len(self.body))
 
         response = requests.request(self.method, self.target, headers=headers, data=self._body)
 
@@ -30,13 +30,7 @@ class HttpAction(Action):
 
         if self.headers:
             for name, value in self.headers.items():
-                try:
-                    value = self._render_with_template(value)
-    
-                except:
-                    pass
-    
-                headers[name] = value
+                headers[name] = self._render_with_template(value)
 
         return headers
 
@@ -47,4 +41,3 @@ class HttpAction(Action):
 
         else:
             return self.body
-

@@ -4,4 +4,3 @@ class ConfigurationException(BaseException):
 
 class ActionInvocationException(BaseException):
     pass
-

@@ -1,14 +1,13 @@
-import sys
 import json
+import sys
 import unittest
 
 from server import Server
 
 
-_original_stdout = sys.stdout
-
-
 def capture_stdout(echo=False):
+    _original_stdout = sys.stdout
+
     class CapturedStream(object):
         def __init__(self):
             self.lines = list()
@@ -39,7 +38,7 @@ def capture_stdout(echo=False):
 class ActionTestBase(unittest.TestCase):
     _headers = {'Content-Type': 'application/json'}
     _body = {'testing': True}
-    
+
     def _invoke(self, actions, expected_status_code=200, body=None):
         if not isinstance(actions, list):
             actions = [actions]
@@ -60,4 +59,3 @@ class ActionTestBase(unittest.TestCase):
             self.assertEqual(expected_status_code, response.status_code)
 
             return sout.dumps()
-

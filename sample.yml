@@ -23,8 +23,7 @@ endpoints:
         - docker-compose:
             project_name: 'abc'
             directory: '/tmp/compose'
-            $project:
-              $get_services:
+            $get_services:
             output: |
               Compose:
               {% for service in result %}
@@ -33,9 +32,8 @@ endpoints:
         - docker-compose:
             project_name: 'abc'
             directory: '/tmp/compose'
-            $project:
-              $up:
-                detached: true
+            $up:
+              detached: true
             output: |
               Containers started:
               {% for container in result %}
@@ -44,10 +42,9 @@ endpoints:
         - docker-compose:
             project_name: 'abc'
             directory: '/tmp/compose'
-            $project:
-              $down:
-                remove_image_type: false
-                include_volumes: true
+            $down:
+              remove_image_type: false
+              include_volumes: true
             output: 'Compose project stopped and removed'
         - execute:
             command: 'echo "Hello from the shell"'

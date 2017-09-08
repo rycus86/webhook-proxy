@@ -1,11 +1,8 @@
-from unittest_helper import capture_stdout, ActionTestBase
-
 import json
 import threading
-
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 
-from server import Server, ConfigurationException
+from unittest_helper import ActionTestBase
 
 
 class HttpActionTest(ActionTestBase):
@@ -26,17 +23,17 @@ class HttpActionTest(ActionTestBase):
 
             def do_PUT(self):
                 self._do_ANY()
-                
+
             def _do_ANY(self):
                 content_length = int(self.headers.get('Content-Length', '0'))
                 if content_length and \
-                    self.headers.get('Content-Type', 'application/json') == 'application/json':
+                                self.headers.get('Content-Type', 'application/json') == 'application/json':
 
                     posted = json.loads(self.rfile.read(content_length))
 
                 else:
                     posted = dict()
-                
+
                 if self.headers.get('X-Fail'):
                     self.send_error(int(self.headers.get('X-Fail')))
 
@@ -51,7 +48,7 @@ class HttpActionTest(ActionTestBase):
                 self.wfile.write('method=%s\n' % self.command)
 
                 for key, value in self.headers.items():
-                    self.wfile.write('H %s=%s\n' % (key, value)) 
+                    self.wfile.write('H %s=%s\n' % (key, value))
 
                 for key, value in posted.items():
                     if isinstance(value, dict):
@@ -75,7 +72,7 @@ class HttpActionTest(ActionTestBase):
         port = self.http_server.server_port
         self.assertIsNotNone(port)
         self.assertGreater(port, 0)
-        
+
         args = kwargs.copy()
 
         if 'target' not in args:
@@ -146,12 +143,11 @@ class HttpActionTest(ActionTestBase):
         self.assertIn('H content-length=%s' % len(message), output)
 
     def test_404_response(self):
-        output = self._invoke_http(headers={'X-Fail': 404})
+        output = self._invoke_http(headers={'X-Fail': '404'})
 
         self.assertIn('HTTP 404', output)
 
     def test_503_response(self):
-        output = self._invoke_http(headers={'X-Fail': 503})
+        output = self._invoke_http(headers={'X-Fail': '503'})
 
         self.assertIn('HTTP 503', output)
-

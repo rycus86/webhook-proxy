@@ -10,4 +10,3 @@ class LogAction(Action):
 
     def _run(self):
         print(self._render_with_template(self.message))
-

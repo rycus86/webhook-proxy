@@ -1,9 +1,8 @@
 from __future__ import print_function
 
-from unittest_helper import capture_stdout, ActionTestBase
-
 from actions import action, Action
-from server import Server, ConfigurationException
+from server import ConfigurationException
+from unittest_helper import ActionTestBase
 
 
 class ActionTest(ActionTestBase):
@@ -46,4 +45,3 @@ class ActionTest(ActionTestBase):
         actions = [{'log': {'unknown_argument': 1}}]
 
         self.assertRaises(ConfigurationException, self._invoke, actions)
-
