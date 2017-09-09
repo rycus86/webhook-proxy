@@ -1,3 +1,4 @@
+six
 flask
 jinja2
 pyYAML
