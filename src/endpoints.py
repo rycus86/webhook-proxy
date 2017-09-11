@@ -15,8 +15,8 @@ class Endpoint(object):
         if not route:
             raise ConfigurationException('An endpoint must have its route defined')
 
-        if not settings:
-            raise ConfigurationException('An endpoint must have settings')
+        if settings is None:
+            settings = dict()
 
         self._route = route
         self._method = settings.get('method', 'POST')
