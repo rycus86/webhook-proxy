@@ -59,8 +59,7 @@ Each endpoint supports the following configuration (all optional):
 | key | description | default |
 | --- | ----------- | ------- |
 | method   | HTTP method supported on the endpoint           | `POST`  |
-| headers  | HTTP header validation rules as a dictionary
-             of names to regular expressions                 | `empty` |
+| headers  | HTTP header validation rules as a dictionary of names to regular expressions  | `empty` |
 | body     | Validation rules for the JSON payload in the request body.<br/>Supports lists too, the `project.item.name` in the example the payload `{"project": {"name": "...", "items": [{"name": "example_12"}]}}` would be accepted as an incoming body.    | `empty` |
 | actions  | List of actions to execute for valid requests.  | `empty` |
 
@@ -81,7 +80,7 @@ The `log` action prints a message on the standard output.
 
 | key | description | default | templated | required |
 | --- | ----------- | ------- | --------- | -------- |
-| message | The log message template | Processing {{ request.path }} ... | yes | no |
+| message | The log message template | `Processing {{ request.path }} ...` | yes | no |
 
 #### execute
 
