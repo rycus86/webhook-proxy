@@ -10,7 +10,16 @@ accept *JSON* webhooks and run actions as a result.
 
 ## Usage
 
-    TODO
+To start the server, run:
+
+```shell
+python app.py [server.yml]
+```
+
+If the parameter is omitted, the configuration file is expected to be `server.yml`
+in the current directory (see configuration details below).
+
+The application can be run using Python 2 or 3.
 
 ## Configuration
 
@@ -101,10 +110,10 @@ _Jinja2_ template as `response`.
 
 | key | description | default | templated | required |
 | --- | ----------- | ------- | --------- | -------- |
-| target  | The target endpoint as `<scheme>://<host>[:<port>][/<path>]` | | no | yes |
-| method  | The HTTP method to use for the request                  | `POST`  | no  | no |
-| headers | The HTTP headers (as dictionary) to add to the request  | `empty` | yes | no |
-| body    | The HTTP body (as string) to send with the request      | `empty` | yes | no |
+| target  | The target endpoint as `<scheme>://<host>[:<port>][/<path>]` |    | no  | yes |
+| method  | The HTTP method to use for the request                  | `POST`  | no  | no  |
+| headers | The HTTP headers (as dictionary) to add to the request  | `empty` | yes | no  |
+| body    | The HTTP body (as string) to send with the request      | `empty` | yes | no  |
 | output  | Output template for printing the response on the standard output | `HTTP {{ response.status_code }} : {{ response.content }}` | yes | no |
 
 #### docker
@@ -167,11 +176,11 @@ from the _Docker Compose_ invocation.
 
 | key | description | default | templated | required |
 | --- | ----------- | ------- | --------- | -------- |
-| project\_name | The _Compose_ project name | | no | yes |
+| project\_name | The _Compose_ project name             | | no | yes |
 | directory     | The directory of the _Compose_ project | | no | yes |
-| composefile   | The filename of the _Composefile_ within the directory | `docker-compose.yml` | no | no |
+| composefile   | The filename of the _Composefile_ within the directory          | `docker-compose.yml` | no  | no |
 | `$invocation` | Exactly one invocation supported by the _Docker Compose_ client (see examples below) | | yes (for values) | yes |
-| output | Output template for printing the result on the standard output | `{{ result }}` | yes | no |
+| output | Output template for printing the result on the standard output         | `{{ result }}`       | yes | no |
 
 Examples:
 
@@ -210,5 +219,50 @@ Examples:
 
 ## Docker
 
-    TODO
+The application can be run in *Docker* containers using images based on *Alpine Linux*
+for 3 processor architectures with the following tags:
+
+- `latest`: for *x86* hosts  
+  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy.svg)](https://microbadger.com/images/rycus86/webhook-proxy "Get your own image badge on microbadger.com")
+- `armhf`: for *32-bits ARM* hosts  
+  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:armhf.svg)](https://microbadger.com/images/rycus86/webhook-proxy:armhf "Get your own image badge on microbadger.com")
+- `aarch64`: for *64-bits ARM* hosts  
+  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:aarch64.svg)](https://microbadger.com/images/rycus86/webhook-proxy:aarch64 "Get your own image badge on microbadger.com")
+
+`latest` is auto-built on [Docker Hub](https://hub.docker.com/r/rycus86/webhook-proxy)
+while the *ARM* builds are uploaded from [Travis](https://travis-ci.org/rycus86/webhook-proxy).
+
+The containers run as a non-root user.
+
+To start the server:
+
+```shell
+docker run -d --name=webhook-proxy -p 5000:5000      \
+    -v $PWD/server.yml:/etc/conf/webhook-server.yml  \
+    rycus86/webhook-proxy:latest                     \
+        /etc/conf/webhook-server.yml
+```
+
+Or put the configuration file at the default location:
+
+```shell
+docker run -d --name=webhook-proxy -p 5000:5000  \
+    -v $PWD/server.yml:/app/server.yml           \
+    rycus86/webhook-proxy:latest
+```
+
+There are 3 more tags available for images that can use the `docker` and `docker-compose`
+action which are running as `root` user:
+
+- `docker`: for *x86* hosts  
+  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:docker.svg)](https://microbadger.com/images/rycus86/webhook-proxy:docker "Get your own image badge on microbadger.com")
+- `armhf-docker`: for *32-bits ARM* hosts  
+  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:armhf-docker.svg)](https://microbadger.com/images/rycus86/webhook-proxy:armhf "Get your own image badge on microbadger.com")
+- `aarch64-docker`: for *64-bits ARM* hosts  
+  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:aarch64-docker.svg)](https://microbadger.com/images/rycus86/webhook-proxy:aarch64 "Get your own image badge on microbadger.com")
+
+Each of these are built on [Travis](https://travis-ci.org/rycus86/webhook-proxy) and
+pushed to [Docker Hub](https://hub.docker.com/r/rycus86/webhook-proxy).
+
+    TODO examples
 
