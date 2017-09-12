@@ -56,8 +56,8 @@ The `server` section defines settings for the HTTP server receiving the webhook 
 
 | key | description | default | required |
 | --- | ----------- | ------- | -------- |
-| host | The host name or address for the server to listen on | `127.0.0.1` | no |
-| port | The port number to accept incoming connections on    | `5000`      | no |
+| host | The host name or address for the server to listen on (set it to `0.0.0.0` to accept connections from any hosts) | `127.0.0.1` | no |
+| port | The port number to accept incoming connections on | `5000` | no |
 
 ### endpoints
 
@@ -257,12 +257,155 @@ action which are running as `root` user:
 - `docker`: for *x86* hosts  
   [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:docker.svg)](https://microbadger.com/images/rycus86/webhook-proxy:docker "Get your own image badge on microbadger.com")
 - `armhf-docker`: for *32-bits ARM* hosts  
-  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:armhf-docker.svg)](https://microbadger.com/images/rycus86/webhook-proxy:armhf "Get your own image badge on microbadger.com")
+  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:armhf-docker.svg)](https://microbadger.com/images/rycus86/webhook-proxy:armhf-docker "Get your own image badge on microbadger.com")
 - `aarch64-docker`: for *64-bits ARM* hosts  
-  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:aarch64-docker.svg)](https://microbadger.com/images/rycus86/webhook-proxy:aarch64 "Get your own image badge on microbadger.com")
+  [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:aarch64-docker.svg)](https://microbadger.com/images/rycus86/webhook-proxy:aarch64-docker "Get your own image badge on microbadger.com")
 
 Each of these are built on [Travis](https://travis-ci.org/rycus86/webhook-proxy) and
 pushed to [Docker Hub](https://hub.docker.com/r/rycus86/webhook-proxy).
 
-    TODO examples
+To run these, the _Docker_ daemon's UNIX socket needs to be mounted into the container
+too apart from the configuration file:
+
+```shell
+docker run -d --name=webhook-proxy -p 5000:5000      \
+    -v $PWD/server.yml:/app/server.yml               \
+    -v /var/run/docker.sock:/var/run/docker.sock:ro  \
+    rycus86/webhook-proxy:docker
+```
+
+In _Docker Compose_ on a 64-bit ARM machine the service definition could look like this:
+
+```yaml
+version: '2'
+services:
+
+  webhooks:
+    image: rycus86/webhook-proxy:aarch64
+    ports:
+      - 8080:5000
+    volumes:
+      - ./webhook-server.yml:/app/server.yml:ro
+```
+
+## Examples
+
+Have a look at the [sample.yml](sample.yml) included in this repo to get
+a better idea of the configuration.
+
+You can also find some examples with short explanation below.
+
+- An externally available server listening on port `7000` and printing
+  details about a _GitHub_ push webhook
+
+```yaml
+server:
+  host: '0.0.0.0'
+  port: '7000'
+
+endpoints:
+  - /github:
+      method: 'POST'
+
+      headers:
+        X-GitHub-Delivery: '^[0-9a-f\-]+$'
+        X-GitHub-Event: 'push'
+
+      body:
+        ref: 'refs/heads/.+'
+        before: '^[0-9a-f]{40}'
+        after: '^[0-9a-f]{40}'
+        repository:
+          id: '^[0-9]+$'
+          full_name: 'sample/.+'
+          owner:
+            email: '.+@.+\..+'
+        commits:
+          id: '^[0-9a-f]{40}'
+          message: '.+'
+          author:
+            name: '.+'
+          added: '^(src/.+)?'
+          removed: '^(src/.+)?'
+        pusher:
+          name: '.+'
+          email: '.+@.+\..+'
+
+      actions:
+        - log:
+            message: |
+              Received a GitHub push from the {{ request.json.repository.full_name }} repo:
+              - Pushed by {{ request.json.pusher.name }} <{{ request.json.pusher.email }}>
+              - Commits included:
+              {% for commit in request.json.commits %}
+              +   {{ commit.id }}
+              +   {{ commit.committer.name }} at {{ commit.timestamp }}
+              +   {{ commit.message }}
+              
+              {% endfor %}
+              Check this change out at {{ request.json.compare }}
+```
+
+The validators for the `/github` endpoint require that
+the `X-GitHub-Delivery` header is hexadecimal separated by dashes and
+the `X-GitHub-Event` header has the `push` value.
+The event also has to come from one of the repos under the `sample` namespace.
+Some of the commit hashes are checked that they are 40 character long
+hexadecimal values and the commit author's name has to be non-empty.
+The `commits` field is actually a list in the _GitHub_ webhook so
+the validation is applied to each commit data individually.
+The `added` and `removed` checks for example accept if the commit has
+not added or removed anything but if it did it has to be in the `src` folder.
+
+For valid webhooks the repository's name, the pushers name and emails are
+printed to the standard output followed by the ID, committer name, timestamp
+and message of each commit in the push.
+The last line displays the URL for the _GitHub_ compare page for the change.
+
+For more information about using the _Jinja2_ templates have a look
+at the [official documentation](http://jinja.pocoo.org).
+
+- Update a _Docker Compose_ project on image changes
+
+Let's assume we have a _Compose_ project with a few services.
+When their image is updated in _Docker Hub_ we want to pull it
+and get _Compose_ to restart the related containers.
+
+```yaml
+server:
+  host: '0.0.0.0'
+  port: '5000'
+
+endpoints:
+  - /webhook/dockerhub:
+      method: 'POST'
+
+      body:
+        repository:
+          repo_name: 'somebody/.+'
+          owner: 'somebody'
+        push_data:
+          tag: 'latest'
+      
+      actions:
+        - docker:
+            $images:
+              $pull:
+                repository: '{{ request.json.repo_name }}'
+                tag: '{{ request.json.tag }}'
+        - docker-compose:
+            project_name: 'autoupdate'
+            directory: '/var/compose/project'
+            $up:
+              detached: true
+            output: |
+              Containers affected:
+              {% for container in result %}
+              {{ container.name }} <{{ container.short_id }}>
+```
+
+The `/webhook/dockerhub` endpoint will accept webhooks from `somebody/*` repos
+when an image's `latest` tag is updated.
+First the `docker` action pulls the updated image then the `docker-compose` action
+applies the changes by restarting any containers using the image.
 
