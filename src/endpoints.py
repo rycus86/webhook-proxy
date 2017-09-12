@@ -31,7 +31,8 @@ class Endpoint(object):
         @app.route(self._route, endpoint=self._route[1:], methods=[self._method])
         def receive():
             if not request.json:
-                return self._make_response(400, 'No payload')
+                if self._body:
+                    return self._make_response(400, 'No payload')
 
             if not self.accept():
                 return self._make_response(409, 'Invalid payload')

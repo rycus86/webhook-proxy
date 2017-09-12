@@ -172,6 +172,27 @@ class ServerTest(unittest.TestCase):
         self.assertRaises(ConfigurationException, Server, [{None: {'method': 'GET'}}])
         self.assertRaises(ConfigurationException, Server, [{'': {'method': 'GET'}}])
 
-    def test_missing_endpoint_settings_throws_exception(self):
-        self.assertRaises(ConfigurationException, Server, [{'/test': None}])
-        self.assertRaises(ConfigurationException, Server, [{'/test': {}}])
+    def test_empty_endpoint_settings_accept_empty_body(self):
+        server = Server([{'/empty': None}])
+
+        server.app.testing = True
+        client = server.app.test_client()
+
+        response = client.post('/empty')
+
+        self.assertEqual(200, response.status_code)
+
+    def test_get_request(self):
+        server = Server([{'/get': {'method': 'GET', 'headers': {'X-Method': '(GET|HEAD)'}}}])
+        
+        server.app.testing = True
+        client = server.app.test_client()
+
+        response = client.get('/get', headers={'X-Method': 'GET'})
+
+        self.assertEqual(200, response.status_code)
+
+        response = client.get('/get', headers={'X-Method': 'Invalid'})
+
+        self.assertEqual(409, response.status_code)
+
