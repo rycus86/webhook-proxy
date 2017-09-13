@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from actions import action, Action
 from server import ConfigurationException
-from unittest_helper import ActionTestBase
+from unittest_helper import ActionTestBase, capture_stream
 
 
 class ActionTest(ActionTestBase):
@@ -35,6 +35,25 @@ class ActionTest(ActionTestBase):
         self.assertIn('string=Hello', output.split())
         self.assertIn('number=12', output.split())
         self.assertIn('bool=True', output.split())
+
+    def test_raising_error(self):
+        actions = [{'log': {'message': 
+            '{% if request.json.fail %}\n'
+            '  {{ error("Failing with : %s"|format(request.json.fail)) }}\n'
+            '{% else %}\n'
+            '  All good\n'
+            '{% endif %}'}}]
+
+        output = self._invoke(actions)
+
+        self.assertIn('All good', output)
+
+        with capture_stream('stderr', echo=True) as output:
+            self._invoke(actions, expected_status_code=500, body={'fail': 'test-failure'})
+
+            output = output.dumps()
+
+        self.assertIn('Failing with : test-failure', output)
 
     def test_invalid_action(self):
         actions = [{'invalid': {'Should': 'not work'}}]

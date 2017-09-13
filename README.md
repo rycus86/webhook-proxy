@@ -56,8 +56,10 @@ The `server` section defines settings for the HTTP server receiving the webhook 
 
 | key | description | default | required |
 | --- | ----------- | ------- | -------- |
-| host | The host name or address for the server to listen on (set it to `0.0.0.0` to accept connections from any hosts) | `127.0.0.1` | no |
-| port | The port number to accept incoming connections on | `5000` | no |
+| host | The host name or address for the server to listen on  | `127.0.0.1` | no |
+| port | The port number to accept incoming connections on     | `5000`      | no |
+
+Set the `host` to `0.0.0.0` to accept connections from any hosts.
 
 ### endpoints
 
@@ -69,8 +71,11 @@ Each endpoint supports the following configuration (all optional):
 | --- | ----------- | ------- |
 | method   | HTTP method supported on the endpoint           | `POST`  |
 | headers  | HTTP header validation rules as a dictionary of names to regular expressions  | `empty` |
-| body     | Validation rules for the JSON payload in the request body.<br/>Supports lists too, the `project.item.name` in the example the payload `{"project": {"name": "...", "items": [{"name": "example_12"}]}}` would be accepted as an incoming body.    | `empty` |
+| body     | Validation rules for the JSON payload in the request body                     | `empty` |
 | actions  | List of actions to execute for valid requests.  | `empty` |
+
+The message body validation supports lists too, the `project.item.name` in the example would accept
+`{"project": {"name": "...", "items": [{"name": "exam    ple_12"}]}}` as an incoming body.
 
 ### actions
 
@@ -80,6 +85,7 @@ By default, these receive the following objects in their context:
 - `request`   : the incoming _Flask_ request being handled
 - `timestamp` : the Epoch timestamp as `time.time()`
 - `datetime`  : human-readable timestamp as `time.ctime()`
+- `error(..)` : a function with an optional `message` argument to raise errors when evaluating templates
 
 The following actions are supported (given their dependencies are met).
 
@@ -98,9 +104,15 @@ The output (string) of the invocation is passed to the _Jinja2_ template as `res
 
 | key | description | default | templated | required |
 | --- | ----------- | ------- | --------- | -------- |
-| command | The command to execute as a string or list | | no | yes |
-| shell   | Configuration for the shell used.<br/>Accepts a boolean (whether to use the default shell or run the command directly) or a string (the shell command that supports `-c`) or a list (for the complete shell prefix, like `['bash', '-c']`)   | `True` | no | no |
-| output  | Output template for printing the result on the standard output | `{{ result }}` | yes | no |
+| command | The command to execute as a string or list                     |                | no  | yes |
+| shell   | Configuration for the shell used (see below)                   | `True`         | no  | no  |
+| output  | Output template for printing the result on the standard output | `{{ result }}` | yes | no  |
+
+The `shell` parameter accepts:
+
+- boolean : whether to use the default shell or run the command directly
+- string  : a shell command that supports `-c`
+- list    : for the complete shell prefix, like `['bash', '-c']`
 
 #### http
 
@@ -129,8 +141,8 @@ _Jinja2_ templates as `result`.
 
 | key | description | default | templated | required |
 | --- | ----------- | ------- | --------- | -------- |
-| `$invocation` | Exactly one invocation supported by the _Docker_ client (see examples below) | | yes (for values) | yes |
-| output | Output template for printing the result on the standard output | `{{ result }}` | yes | no |
+| `$invocation` | Exactly one invocation supported by the _Docker_ client (see examples below) |                | yes (for values) | yes |
+| output        | Output template for printing the result on the standard output               | `{{ result }}` | yes              | no  |
 
 Examples:
 
@@ -389,6 +401,15 @@ endpoints:
       
       actions:
         - docker:
+            $containers:
+              $list:
+            output: |
+              {% for container in result if request.json.repository.repo_name in container.image.tags %}
+                Found {{ container.name }} with {{ container.image }}
+              {% else %}
+                {{ error('No containers found using %s'|filter(request.json.repo_name)) }}
+              {% endfor %}
+        - docker:
             $images:
               $pull:
                 repository: '{{ request.json.repo_name }}'
@@ -406,6 +427,8 @@ endpoints:
 
 The `/webhook/dockerhub` endpoint will accept webhooks from `somebody/*` repos
 when an image's `latest` tag is updated.
-First the `docker` action pulls the updated image then the `docker-compose` action
-applies the changes by restarting any containers using the image.
+First a `docker` action checks that we already have containers running that
+use the image then another `docker` action pulls the updated image and
+finally the `docker-compose` action applies the changes by restarting
+any related containers.
 

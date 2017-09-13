@@ -5,8 +5,8 @@ import unittest
 from server import Server
 
 
-def capture_stdout(echo=False):
-    _original_stdout = sys.stdout
+def capture_stream(stream='stdout', echo=False):
+    _original_stream = getattr(sys, stream)
 
     class CapturedStream(object):
         def __init__(self):
@@ -16,7 +16,7 @@ def capture_stdout(echo=False):
             self.lines.append(line.strip())
 
             if echo:
-                _original_stdout.write(line)
+                _original_stream.write(line)
 
         def dumps(self):
             return '\n'.join(str(line.strip()) for line in self.lines if line)
@@ -25,12 +25,12 @@ def capture_stdout(echo=False):
         def __enter__(self):
             capture = CapturedStream()
 
-            sys.stdout = capture
+            setattr(sys, stream, capture)
 
             return capture
 
         def __exit__(self, *args, **kwargs):
-            sys.stdout = _original_stdout
+            setattr(sys, stream, _original_stream)
 
     return CapturedContext()
 
@@ -51,7 +51,7 @@ class ActionTestBase(unittest.TestCase):
         server.app.testing = True
         self.client = server.app.test_client()
 
-        with capture_stdout() as sout:
+        with capture_stream() as sout:
             response = self.client.post('/testing',
                                         headers=self._headers, data=json.dumps(body),
                                         content_type='application/json')
