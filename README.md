@@ -86,6 +86,30 @@ By default, these receive the following objects in their context:
 - `timestamp` : the Epoch timestamp as `time.time()`
 - `datetime`  : human-readable timestamp as `time.ctime()`
 - `error(..)` : a function with an optional `message` argument to raise errors when evaluating templates
+- `context`   : a thread-local object for passing information from one action to another
+
+_Jinja2_ does not let you execute code in the templates directly, so to use
+the `error` and `context` objects you need to do something like this:
+
+```
+{% if 'something' is 'wrong' %}
+  
+  {# treat it as literal (will display None) #}
+  {{ error('Something is not right }}
+
+  {# or use the assignment block with a dummy variable #}
+  {% set _ = error() %}
+
+{% else %}
+
+  {% context.set('verdict', 'All good') %}
+
+{% endif %}
+
+## In another action's template:
+
+  Previously we said {{ context.verdict }}
+```
 
 The following actions are supported (given their dependencies are met).
 
@@ -407,7 +431,7 @@ endpoints:
               {% for container in result if request.json.repository.repo_name in container.image.tags %}
                 Found {{ container.name }} with {{ container.image }}
               {% else %}
-                {{ error('No containers found using %s'|filter(request.json.repo_name)) }}
+                {% set _ = error('No containers found using %s'|filter(request.json.repo_name)) %}
               {% endfor %}
         - docker:
             $images:

@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import time
+import threading
 import traceback
 
 from flask import request
@@ -42,6 +43,16 @@ def _register_available_actions():
         from actions.action_docker_compose import DockerComposeAction
 
 
+class _context_helper(object):
+    _context = threading.local()
+
+    def __getattr__(self, item):
+        return getattr(self._context, item)
+
+    def set(self, name, value):
+        setattr(self._context, name, value)
+
+
 class Action(object):
     _registered_actions = dict()
 
@@ -58,11 +69,19 @@ class Action(object):
         raise ActionInvocationException('%s.run not implemented' % type(self).__name__)
 
     def _render_with_template(self, template, **kwargs):
-        def error(message='The "%s" action threw an error' % self.action_name):
-            raise ActionInvocationException(message)
-
         template = Template(template)
-        return template.render(request=request, timestamp=time.time(), datetime=time.ctime(), error=error, **kwargs)
+        return template.render(request=request,
+                               timestamp=time.time(),
+                               datetime=time.ctime(),
+                               context=_context_helper(),
+                               error=self.error,
+                               **kwargs)
+
+    def error(self, message=''):
+        if not message:
+            message = 'The "%s" action threw an error' % self.action_name
+
+        raise ActionInvocationException(message)
 
     @classmethod
     def register(cls, name, action_type):
