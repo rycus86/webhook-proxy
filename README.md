@@ -252,7 +252,7 @@ docker run -d --name=webhook-proxy -p 5000:5000  \
 ```
 
 There are 3 more tags available for images that can use the `docker` and `docker-compose`
-action which are running as `root` user:
+actions which are running as `root` user:
 
 - `docker`: for *x86* hosts  
   [![Layers](https://images.microbadger.com/badges/image/rycus86/webhook-proxy:docker.svg)](https://microbadger.com/images/rycus86/webhook-proxy:docker "Get your own image badge on microbadger.com")
@@ -290,7 +290,7 @@ services:
 
 ## Examples
 
-Have a look at the [sample.yml](sample.yml) included in this repo to get
+Have a look at the [sample.yml](https://github.com/rycus86/webhook-proxy/blob/master/sample.yml) included in this repo to get
 a better idea of the configuration.
 
 You can also find some examples with short explanation below.
