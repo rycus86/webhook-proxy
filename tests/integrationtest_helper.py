@@ -130,7 +130,7 @@ class IntegrationTestBase(unittest.TestCase):
 
     @classmethod
     def request(cls, uri, **json):
-        return requests.post('http://localhost:9003%s' % uri, json=json)
+        return requests.post('http://%s:9003%s' % (cls.DIND_HOST, uri), json=json)
 
     def setUp(self):
         self.started_containers = list()
@@ -144,6 +144,7 @@ class IntegrationTestBase(unittest.TestCase):
                                                       command='/tmp/%s' % config_filename,
                                                       ports={'9001': '9002'},
                                                       volumes=['/tmp:/tmp:ro'],
+                                                      environment=['PYTHONUNBUFFERED=1'],
                                                       detach=True)
 
         self.started_containers.append(container)

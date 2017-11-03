@@ -56,10 +56,16 @@ class ExecuteIntegrationTest(IntegrationTestBase):
 
         container = self.start_app_container('test-02.yml')
 
-        response = self.request('/b64', content='testing:sample')
+        response = self.request('/b64', content='testing')
+
+        self.assertEqual(response.status_code, 200)
+
+        response = self.request('/b64', content='sample')
 
         self.assertEqual(response.status_code, 200)
 
         output = container.logs(stdout=True, stderr=False)
 
-        self.assertIn('encoded=%s' % base64.b64encode('testing:sample'), output)
+        self.assertIn('encoded=%s' % base64.b64encode('testing'), output)
+        self.assertIn('encoded=%s' % base64.b64encode('sample'), output)
+
