@@ -19,14 +19,18 @@ class ExecuteAction(Action):
 
     def _run(self):
         if self.shell:
+            command = self._render_with_template(' '.join(self.command))
+
             if isinstance(self.shell, list):
-                output = invoke_command(self.shell + [' '.join(self.command)])
+                output = invoke_command(self.shell + [command])
 
             else:
-                output = invoke_command([self.shell, '-c', ' '.join(self.command)])
+                output = invoke_command([self.shell, '-c', command])
 
         else:
-            output = invoke_command(self.command)
+            command = map(self._render_with_template, self.command)
+
+            output = invoke_command(command)
 
         if not isinstance(output, str) and hasattr(output, 'decode'):
             output = output.decode()

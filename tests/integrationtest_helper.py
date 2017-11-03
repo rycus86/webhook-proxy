@@ -10,6 +10,10 @@ class IntegrationTestBase(unittest.TestCase):
     DIND_HOST = os.environ.get('DIND_HOST', 'localhost')
     DIND_VERSION = os.environ.get('DIND_VERSION')
 
+    local_client = None
+    remote_client = None
+    dind_container = None
+
     @classmethod
     def setUpClass(cls):
         assert cls.DIND_VERSION is not None
@@ -37,9 +41,8 @@ class IntegrationTestBase(unittest.TestCase):
     @classmethod
     def start_dind_container(cls):
         container = cls.local_client.containers.run('docker:%s-dind' % cls.DIND_VERSION,
-                                                    command='--storage-driver=overlay',
                                                     name='webhook-dind-%s' % int(time.time()),
-                                                    ports={'2375': None},
+                                                    ports={'2375': None, '9002': '9003'},
                                                     privileged=True, detach=True)
 
         try:
@@ -86,6 +89,19 @@ class IntegrationTestBase(unittest.TestCase):
                                    version='auto')
 
     @classmethod
+    def wait_for_startup(cls, container, extra=0, timeout=30):
+        container.reload()
+
+        for _ in range(timeout * 2):
+            if container.status == 'running':
+                if extra > 0:
+                    time.sleep(extra)
+
+                return
+
+            time.sleep(0.5)
+
+    @classmethod
     def prepare_images(cls, *images):
         for tag in images:
             image = cls.local_client.images.get(tag)
@@ -112,3 +128,26 @@ class IntegrationTestBase(unittest.TestCase):
     def prepare_file(cls, filename, contents):
         cls.dind_container.exec_run(['tee', '/tmp/%s' % filename], stdin=True, socket=True).sendall(contents)
 
+    @classmethod
+    def request(cls, uri, **json):
+        return requests.post('http://localhost:9003%s' % uri, json=json)
+
+    def setUp(self):
+        self.started_containers = list()
+
+    def tearDown(self):
+        for container in self.started_containers:
+            container.remove(force=True, v=True)
+
+    def start_app_container(self, config_filename):
+        container = self.remote_client.containers.run('webhook-testing',
+                                                      command='/tmp/%s' % config_filename,
+                                                      ports={'9001': '9002'},
+                                                      volumes=['/tmp:/tmp:ro'],
+                                                      detach=True)
+
+        self.started_containers.append(container)
+
+        self.wait_for_startup(container, extra=1)
+
+        return container
