@@ -147,17 +147,10 @@ class DockerIntegrationTest(IntegrationTestBase):
                         command: 'sh -c "echo \"{{ request.json.message }}\" && sleep 3600"'
                         detach: true
                     output: '{% set _ = context.set("target", result) %}'
-                - docker:
-                    $api:
-                      $restart:
-                        resource_id: '{{ context.target.id }}'
-                        timeout: 1
-                - docker:
-                    $api:
-                      $logs:
-                        resource_id: '{{ context.target.id }}'
-                        stdout: true
-                        stderr: false
+                - eval:
+                    block: |
+                      {{ context.target.restart(timeout=1) }}
+                      {{ context.target.logs(stdout=true, stderr=false) }}
         """
 
         self.prepare_file('test-25.yml', config)
@@ -171,4 +164,3 @@ class DockerIntegrationTest(IntegrationTestBase):
         output = container.logs(stdout=True, stderr=False)
 
         self.assertIn('Starting...\nStarting...', output)
-
