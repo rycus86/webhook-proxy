@@ -34,6 +34,8 @@ def _safe_import():
 def _register_available_actions():
     from actions.action_log import LogAction
     from actions.action_execute import ExecuteAction
+    from actions.action_evaluate import EvaluateAction
+    from actions.action_sleep import SleepAction
 
     with _safe_import():
         from actions.action_http import HttpAction
@@ -43,7 +45,7 @@ def _register_available_actions():
         from actions.action_docker_compose import DockerComposeAction
 
 
-class _context_helper(object):
+class _ContextHelper(object):
     _context = threading.local()
 
     def __getattr__(self, item):
@@ -54,6 +56,7 @@ class _context_helper(object):
 
 
 class Action(object):
+    action_name = None
     _registered_actions = dict()
 
     def run(self):
@@ -73,7 +76,7 @@ class Action(object):
         return template.render(request=request,
                                timestamp=time.time(),
                                datetime=time.ctime(),
-                               context=_context_helper(),
+                               context=_ContextHelper(),
                                error=self.error,
                                **kwargs)
 
