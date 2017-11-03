@@ -1,0 +1,19 @@
+image: rycus86/webhook-proxy:docker
+manifests:
+  -
+    image: rycus86/webhook-proxy:amd64-docker
+    platform:
+      architecture: amd64
+      os: linux
+  -
+    image: rycus86/webhook-proxy:armhf-docker
+    platform:
+      architecture: arm
+      variant: v7
+      os: linux
+  -
+    image: rycus86/webhook-proxy:aarch64-docker
+    platform:
+      architecture: arm64
+      variant: v8
+      os: linux
