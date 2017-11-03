@@ -28,7 +28,7 @@ class IntegrationTestBase(unittest.TestCase):
 
         cls.remote_client = cls.dind_client(cls.dind_container)
 
-        cls.prepare_images('webhook-testing', 'alpine')
+        cls.prepare_images('webhook-testing')
 
     @classmethod
     def tearDownClass(cls):
@@ -126,6 +126,7 @@ class IntegrationTestBase(unittest.TestCase):
 
     @classmethod
     def prepare_file(cls, filename, contents):
+        cls.dind_container.exec_run(['mkdir', '-p', os.path.dirname('/tmp/%s' % filename)])
         cls.dind_container.exec_run(['tee', '/tmp/%s' % filename], stdin=True, socket=True).sendall(contents)
 
     @classmethod
@@ -141,9 +142,10 @@ class IntegrationTestBase(unittest.TestCase):
 
     def start_app_container(self, config_filename):
         container = self.remote_client.containers.run('webhook-testing',
-                                                      command='/tmp/%s' % config_filename,
+                                                      command='/var/tmp/%s' % config_filename,
                                                       ports={'9001': '9002'},
-                                                      volumes=['/tmp:/tmp:ro'],
+                                                      volumes=['/var/run/docker.sock:/var/run/docker.sock:ro',
+                                                               '/tmp:/var/tmp:ro'],
                                                       environment=['PYTHONUNBUFFERED=1'],
                                                       detach=True)
 

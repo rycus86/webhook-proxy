@@ -102,7 +102,7 @@ the `error` and `context` objects you need to do something like this:
 
 {% else %}
 
-  {% context.set('verdict', 'All good') %}
+  {% set _ = context.set('verdict', 'All good') %}
 
 {% endif %}
 
@@ -195,10 +195,11 @@ Examples:
             tag: '{{ request.json.get('tag', 'latest') }}'
 
     - docker:
-        $run:
-          image: 'alpine'
-          command: 'echo "Hello {{ request.json.message }}!"'
-          remove: true
+        $containers:
+          $run:
+            image: 'alpine'
+            command: 'echo "Hello {{ request.json.message }}!"'
+            remove: true
 ```
 
 #### docker-compose
