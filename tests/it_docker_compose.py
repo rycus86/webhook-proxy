@@ -1,5 +1,3 @@
-from unittest import skip
-
 from integrationtest_helper import IntegrationTestBase
 
 
@@ -117,17 +115,16 @@ class DockerComposeIntegrationTest(IntegrationTestBase):
         self.assertIn('name=scaling_web_1\nlogs=web is running', output)
         self.assertIn('name=scaling_web_2\nlogs=web is running', output)
 
-    @skip('Currently recreating containers rather than restarting them so output checks are off')
     def test_restart_service(self):
         project_yaml = """
         version: '2'
         services:
           app:
             image: alpine
-            command: sh -c 'echo "app is running" && sleep 3600'
+            command: sh -c 'echo "app started at $$(date +%s)" && sleep 3600'
           web:
             image: alpine
-            command: sh -c 'echo "web is running" && sleep 3600'
+            command: sh -c 'echo "web started at $$(date +%s)" && sleep 3600'
         """
 
         self.prepare_file('restarts/docker-compose.yml', project_yaml)
@@ -147,7 +144,17 @@ class DockerComposeIntegrationTest(IntegrationTestBase):
                       detached: true
                       scale_override:
                         web: 2
-                    output: 'Started the project'
+                - docker-compose:
+                    project_name: restarts
+                    directory: /var/tmp/restarts
+                    $containers:
+                    output: |
+                      {% for container in result %}
+                        Logging for {{ container.name }}
+                        {{ container.logs(stdout=true) }}
+                      {% endfor %}
+                - log:
+                    message: '--- separator ---'
                 - docker-compose:
                     project_name: restarts
                     directory: /var/tmp/restarts
@@ -158,7 +165,6 @@ class DockerComposeIntegrationTest(IntegrationTestBase):
                       service_names:
                         - web
                       strategy: 2
-                    output: 'Restarted web'
                 - docker-compose:
                     project_name: restarts
                     directory: /var/tmp/restarts
@@ -172,12 +178,10 @@ class DockerComposeIntegrationTest(IntegrationTestBase):
                       {% for container in context.containers %}
                         {{ container.restart(timeout=request.json.timeout) }}
                       {% endfor %}
-                      Restarted app
                 - docker-compose:
                     project_name: restarts
                     directory: /var/tmp/restarts
                     $containers:
-                      stopped: true
                     output: |
                       {% for container in result %}
                         Logging for {{ container.name }}
@@ -195,5 +199,10 @@ class DockerComposeIntegrationTest(IntegrationTestBase):
 
         output = container.logs(stdout=True, stderr=False)
 
-        self.assertEqual(output.count('app is running'), 2)
-        self.assertEqual(output.count('web is running'), 4)
+        initial, after_restart = output.split('--- separator ---')
+
+        self.assertEqual(initial.count('app started'), 1)
+        self.assertEqual(initial.count('web started'), 2)
+
+        self.assertEqual(after_restart.count('app started'), 2)  # from project.up and from its own restart
+        self.assertEqual(after_restart.count('web started'), 2)
