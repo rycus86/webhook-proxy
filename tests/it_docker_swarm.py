@@ -5,6 +5,7 @@ from integrationtest_helper import IntegrationTestBase
 
 
 class DockerSwarmIntegrationTest(IntegrationTestBase):
+    DIND_VERSION = '17.09'
 
     @classmethod
     def setUpClass(cls):
@@ -85,7 +86,7 @@ class DockerSwarmIntegrationTest(IntegrationTestBase):
 
         self.assertEqual(logs.count('Starting'), 1)
 
-        container = self.start_app_container('test-42.yml')
+        self.start_app_container('test-42.yml')
 
         response = self.request('/docker/swarm/restart', service='sample-app')
 
@@ -101,8 +102,9 @@ class DockerSwarmIntegrationTest(IntegrationTestBase):
     def wait_for_service_start(service, num_tasks, max_wait=30):
         for _ in range(max_wait * 2):
             if len(service.tasks()) >= num_tasks:
-                if all(task['Status']['State'] == 'running'
-                       for task in service.tasks(filters={'desired-state': 'running'})):
+                tasks_to_run = service.tasks(filters={'desired-state': 'running'})
+
+                if len(tasks_to_run) > 0 and all(task['Status']['State'] == 'running' for task in tasks_to_run):
                     break
 
             time.sleep(0.5)
@@ -113,9 +115,4 @@ class DockerSwarmIntegrationTest(IntegrationTestBase):
         for container in self.remote_client.containers.list(all=True, filters={'name': service.name}):
             logs.extend(''.join(char for char in container.logs(stdout=stdout, stderr=stderr)).splitlines())
 
-
         return filter(len, map(lambda x: x.strip(), logs))
-
-    def is_below_version(self, version):
-        return map(int, self.DIND_VERSION.split('.')) < map(int, version.split('.'))
-
