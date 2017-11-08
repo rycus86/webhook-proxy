@@ -71,11 +71,8 @@ class DockerSwarmIntegrationTest(IntegrationTestBase):
         logs = list()
 
         if self.is_below_version('17.05'):
-            for remote_container in self.dind_containers:
-                client = self.dind_client(remote_container)
-
-                for container in client.containers.list(filters={'name': service.name}):
-                    logs.extend(''.join(char for char in container.logs(stdout=stdout, stderr=stderr)).splitlines())
+            for container in self.remote_client.containers.list(filters={'name': service.name}):
+                logs.extend(''.join(char for char in container.logs(stdout=stdout, stderr=stderr)).splitlines())
 
         else:
             logs.extend(''.join(item for item in service.logs(stdout=stdout, stderr=stderr)).splitlines())
