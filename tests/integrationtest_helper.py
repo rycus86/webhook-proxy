@@ -146,7 +146,6 @@ class IntegrationTestBase(unittest.TestCase):
                                                       ports={'9001': '9002'},
                                                       volumes=['/var/run/docker.sock:/var/run/docker.sock:ro',
                                                                '/tmp:/var/tmp:ro'],
-                                                      environment=['PYTHONUNBUFFERED=1'],
                                                       detach=True)
 
         self.started_containers.append(container)
