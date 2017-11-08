@@ -5,7 +5,6 @@ from integrationtest_helper import IntegrationTestBase
 
 
 class DockerSwarmIntegrationTest(IntegrationTestBase):
-    DIND_VERSION = '17.09'
 
     @classmethod
     def setUpClass(cls):
@@ -97,6 +96,90 @@ class DockerSwarmIntegrationTest(IntegrationTestBase):
         logs = self.get_service_logs(service)
 
         self.assertEqual(logs.count('Starting'), 2)
+
+    def test_scale_service(self):
+        config = """
+        server:
+          host: 0.0.0.0
+          port: 9001
+
+        endpoints:
+          - /docker/swarm/scale:
+              actions:
+                - docker-swarm:
+                    $scale:
+                      service_id: '{{ request.json.service }}'
+                      replicas: '{{ request.json.replicas }}'
+        """
+
+        self.prepare_file('test-43.yml', config)
+
+        service = self.remote_client.services.create('alpine',
+                                                     name='sample-app',
+                                                     command='sh -c "echo \"Starting\" ; sleep 3600"',
+                                                     stop_grace_period=1)
+
+        self.wait_for_service_start(service, num_tasks=1)
+
+        self.assertEqual(len(service.tasks()), 1)
+
+        self.start_app_container('test-43.yml')
+
+        response = self.request('/docker/swarm/scale', service='sample-app', replicas=2)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.wait_for_service_start(service, num_tasks=2)
+
+        self.assertEqual(len(service.tasks()), 2)
+
+    def test_update_service(self):
+        config = """
+        server:
+          host: 0.0.0.0
+          port: 9001
+
+        endpoints:
+          - /docker/swarm/update:
+              actions:
+                - docker-swarm:
+                    $update:
+                      service_id: '{{ request.json.service }}'
+                      command: '{{ request.json.command }}'
+                      labels:
+                        label_1: 'sample'
+                        label_2: '{{ request.json.label }}'
+        """
+
+        self.prepare_file('test-44.yml', config)
+
+        service = self.remote_client.services.create('alpine',
+                                                     name='sample-app',
+                                                     command='sh -c "echo \"Starting\" ; sleep 3600"',
+                                                     stop_grace_period=1)
+
+        self.wait_for_service_start(service, num_tasks=1)
+
+        self.start_app_container('test-44.yml')
+
+        response = self.request('/docker/swarm/update',
+                                service='sample-app',
+                                command='sh -c "echo \"Updated\" ; sleep 300"',
+                                label='testing')
+
+        self.assertEqual(response.status_code, 200)
+
+        self.wait_for_service_start(service, num_tasks=2)
+
+        service.reload()
+
+        self.assertEqual(service.attrs.get('Spec').get('Labels', dict()).get('label_1'), 'sample')
+        self.assertEqual(service.attrs.get('Spec').get('Labels', dict()).get('label_2'), 'testing')
+
+        logs = self.get_service_logs(service)
+
+        self.assertIn('Starting', logs)
+        self.assertIn('Updated', logs)
 
     @staticmethod
     def wait_for_service_start(service, num_tasks, max_wait=30):
