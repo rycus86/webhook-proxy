@@ -13,4 +13,6 @@ RUN pip install -r /tmp/docker-requirements.txt
 ADD src /app
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
+
 ENTRYPOINT [ "python", "app.py"]

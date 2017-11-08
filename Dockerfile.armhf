@@ -13,4 +13,6 @@ USER webapp
 ADD src /app
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
+
 ENTRYPOINT [ "python", "app.py"]
