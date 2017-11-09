@@ -18,21 +18,23 @@ class DockerSwarmAction(DockerAction):
         return self
 
     def restart(self, service_id):
-        service = self.client.services.get(self._render_with_template(service_id))
-
-        return self._update_service(service, force_update=True)
+        return self._update_service(service_id, force_update=True)
 
     def scale(self, service_id, replicas):
-        service = self.client.services.get(self._render_with_template(service_id))
-
-        return self._update_service(service, replicas=replicas)
+        return self._update_service(service_id, replicas=replicas)
 
     def update(self, service_id, **kwargs):
+        return self._update_service(service_id, **self._process_arguments(kwargs))
+
+    def _update_service(self, service_id, **kwargs):
         service = self.client.services.get(self._render_with_template(service_id))
 
-        return self._update_service(service, **self._process_arguments(kwargs))
+        if self._execute_update(service, **kwargs):
+            service.reload()
 
-    def _update_service(self, service, **kwargs):
+            return service
+
+    def _execute_update(self, service, **kwargs):
         raw = service.attrs
         spec = raw['Spec']
 
