@@ -75,7 +75,7 @@ Each endpoint supports the following configuration (all optional):
 | actions  | List of actions to execute for valid requests.  | `empty` |
 
 The message body validation supports lists too, the `project.item.name` in the example would accept
-`{"project": {"name": "...", "items": [{"name": "exam    ple_12"}]}}` as an incoming body.
+`{"project": {"name": "...", "items": [{"name": "example_12"}]}}` as an incoming body.
 
 ### actions
 
@@ -120,6 +120,16 @@ The `log` action prints a message on the standard output.
 | key | description | default | templated | required |
 | --- | ----------- | ------- | --------- | -------- |
 | message | The log message template | `Processing {{ request.path }} ...` | yes | no |
+
+#### eval
+
+The `eval` action evaluates a _Jinja2_ template block.
+This can be useful to work with objects passed through from previous actions using
+the `context` for example.
+
+| key | description | default | templated | required |
+| --- | ----------- | ------- | --------- | -------- |
+| block | The template block to evaluate | | yes | yes |
 
 #### execute
 
@@ -253,6 +263,82 @@ Examples:
           include_volumes: true
         output: 'Compose project stopped'
 ```
+
+#### docker-swarm
+
+The `docker-swarm` action exposes convenience _Docker_ actions for _Swarm_ related operations
+that might require quite a bit of manual work to replicate with the `docker` action.
+
+The action supports _exactly one_ invocation (per action) on its own action object.
+The invocations are in the same format as with the `docker` action and the available
+ones are:
+
+- `$restart`: restarts (force updates) a _Swarm_ service matching the `service_id` parameter
+  (this can be a service name or ID)
+- `$scale`: updates a __replicated__ service matched by `service_id` to have `replicas` number
+  of instances
+- `$update`: updates a service matched by `service_id`
+
+The update invocation uses the current service spec and updates them with the following
+parameters if they are present:
+
+- `image`, `command`, `args`, `hostname`, `env`, `dir`, `user`, `mounts`, `stop_grace_period`, `tty`
+  for the container specification (see `docker.types.services.ContainerSpec`)
+- `container_labels` for container labels
+- `secrets` for secret references as a list of dictionaries
+  (see `docker.types.services.SecretReference`) 
+- `resources`, `restart_policy`, `placement` for the task template specification
+  (see `docker.types.services.TaskTemplate`)
+- `labels` for service labels
+- `replicas` for number of instances for __replicated__ services
+- `update_config` for the service update configuration
+  (see `docker.types.services.UpdateConfig`)
+- `networks` as a list of network IDs or names
+- `endpoint_spec` for the endpoint specification
+  (see `docker.types.services.EndpointSpec`)
+
+The result of the invocations will be the service object if the service update was successful. 
+
+| key | description | default | templated | required |
+| --- | ----------- | ------- | --------- | -------- |
+| `$invocation` | Exactly one invocation supported by the action (see examples below) | | yes (for values) | yes |
+| output | Output template for printing the result on the standard output | `{{ result }}` | yes | no |
+
+Examples:
+
+```yaml
+...
+  actions:
+    - docker-swarm:
+        $restart:
+          service_id: '{{ request.json.service }}'
+        output: >
+          Service restarted: {{ result.name }}
+
+    - docker-swarm:
+        $scale:
+          service_id: '{{ request.json.service }}'
+          replicas: '{{ request.json.replicas }}'
+
+    - docker-swarm:
+        $update:
+          service_id: '{{ request.json.service }}'
+          command: '{{ request.json.command }}'
+          labels:
+            label_1: 'sample'
+            label_2: '{{ request.json.label }}'
+```
+
+#### sleep
+
+The `sleep` action waits for a given time period.
+It may be useful if an action has executed something asynchronous and another action
+relies on the outcome that would only happen a little bit later.
+
+| key | description | default | templated | required |
+| --- | ----------- | ------- | --------- | -------- |
+| seconds | Number of seconds to sleep for | | yes | yes | 
+| message | The message template to print on the standard output | `Waiting {{ seconds }} seconds before continuing ...` | yes | no |
 
 ## Docker
 
