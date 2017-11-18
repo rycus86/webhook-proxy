@@ -12,7 +12,7 @@ class SleepAction(Action):
     def _run(self):
         seconds = float(self._render_with_template(str(self.seconds)))
 
-        print(self._render_with_template(self.ouput_format, seconds=seconds))
+        print(self._render_with_template(self.output_format, seconds=seconds))
 
         time.sleep(seconds)
 
