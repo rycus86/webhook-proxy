@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import re
+import threading
 import traceback
 
 import six
@@ -20,6 +21,7 @@ class Endpoint(object):
 
         self._route = route
         self._method = settings.get('method', 'POST')
+        self._async = settings.get('async', False)
         self._headers = settings.get('headers', dict())
         self._body = settings.get('body', dict())
 
@@ -37,15 +39,29 @@ class Endpoint(object):
             if not self.accept():
                 return self._make_response(409, 'Invalid payload')
 
-            try:
-                for action in self._actions:
-                    action.run()
+            if self._async:
+                threading.Thread(target=self._safe_run_actions).start()
 
-            except:
-                traceback.print_exc()
-                return self._make_response(500, 'Internal Server Error')
+            else:
+                try:
+                    self._run_actions()
+
+                except:
+                    traceback.print_exc()
+                    return self._make_response(500, 'Internal Server Error')
 
             return self._make_response(200, 'OK\n')
+
+    def _run_actions(self):
+        for action in self._actions:
+            action.run()
+
+    def _safe_run_actions(self):
+        try:
+            self._run_actions()
+
+        except:
+            traceback.print_exc()
 
     @staticmethod
     def _make_response(status, message):

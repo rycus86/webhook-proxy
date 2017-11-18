@@ -1,4 +1,6 @@
+import sys
 import json
+import time
 import unittest
 
 from server import Server, ConfigurationException
@@ -196,3 +198,50 @@ class ServerTest(unittest.TestCase):
 
         self.assertEqual(409, response.status_code)
 
+    def test_async_request(self):
+        self.server = Server([
+            {
+                '/testing': {
+                    'body': {
+                        'key': 'value'
+                    },
+                    'async': True,
+                    'actions': [
+                        {
+                            'sleep': {
+                                'seconds': 0.5
+                            }
+                        },
+                        {
+                            'log': {
+                                'message': 'Running now'
+                            }
+                        }
+                    ]
+                }
+            }
+        ])
+
+        self.server.app.testing = True
+        self.client = self.server.app.test_client()
+
+        _stdout = sys.stdout
+        _output = []
+
+        class CapturingStdout(object):
+            def write(self, content):
+                _output.append(content)
+
+        sys.stdout = CapturingStdout()
+
+        try:
+            self._check(200, headers=None, body={'key': 'value'})
+
+            self.assertNotIn('Running now', ''.join(_output))
+
+            time.sleep(1)
+
+            self.assertIn('Running now', ''.join(_output))
+
+        finally:
+            sys.stdout = _stdout
