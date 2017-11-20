@@ -214,7 +214,7 @@ class ServerTest(unittest.TestCase):
                         },
                         {
                             'log': {
-                                'message': 'Running now'
+                                'message': 'Serving {{ request.path }} with key={{ request.json.key }}'
                             }
                         }
                     ]
@@ -237,11 +237,11 @@ class ServerTest(unittest.TestCase):
         try:
             self._check(200, headers=None, body={'key': 'value'})
 
-            self.assertNotIn('Running now', ''.join(_output))
+            self.assertNotIn('Serving /testing with key=value', ''.join(_output))
 
             time.sleep(1)
 
-            self.assertIn('Running now', ''.join(_output))
+            self.assertIn('Serving /testing with key=value', ''.join(_output))
 
         finally:
             sys.stdout = _stdout

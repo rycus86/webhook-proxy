@@ -40,13 +40,15 @@ class Endpoint(object):
                 return self._make_response(409, 'Invalid payload')
 
             if self._async:
-                threading.Thread(target=self._safe_run_actions).start()
+                args = (app, request.environ.copy(), request.json)
+                
+                threading.Thread(target=self._safe_run_actions, args=args).start()
 
             else:
                 try:
                     self._run_actions()
 
-                except:
+                except Exception:
                     traceback.print_exc()
                     return self._make_response(500, 'Internal Server Error')
 
@@ -56,12 +58,16 @@ class Endpoint(object):
         for action in self._actions:
             action.run()
 
-    def _safe_run_actions(self):
-        try:
-            self._run_actions()
+    def _safe_run_actions(self, app, request_environment, json):
+        with app.request_context(request_environment):
+            # reassigning the JSON body of the request on a different thread
+            setattr(request, '_cached_json', json)
 
-        except:
-            traceback.print_exc()
+            try:
+                self._run_actions()
+
+            except Exception:
+                traceback.print_exc()
 
     @staticmethod
     def _make_response(status, message):
