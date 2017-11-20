@@ -41,7 +41,7 @@ class Endpoint(object):
 
             if self._async:
                 args = (app, request.environ.copy(), request.json)
-                
+
                 threading.Thread(target=self._safe_run_actions, args=args).start()
 
             else:

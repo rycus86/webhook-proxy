@@ -1,6 +1,6 @@
-class ConfigurationException(BaseException):
+class ConfigurationException(Exception):
     pass
 
 
-class ActionInvocationException(BaseException):
+class ActionInvocationException(Exception):
     pass
