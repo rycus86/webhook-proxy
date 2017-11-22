@@ -57,6 +57,17 @@ class _ContextHelper(object):
         setattr(self._context, name, value)
 
 
+class _CauseTraceback(object):
+    def __init__(self):
+        self.content = list()
+
+    def write(self, data):
+        self.content.append('  %s' % data)
+
+    def __str__(self):
+        return ''.join(self.content)
+
+
 class Action(object):
     action_name = None
     _registered_actions = dict()
@@ -66,9 +77,13 @@ class Action(object):
             return self._run()
 
         except Exception as ex:
+            cause = _CauseTraceback()
+            traceback.print_exc(file=cause)
+
             raise ActionInvocationException('Failed to invoke %s.run:\n'
-                                            '  Reason (%s): %s' %
-                                            (type(self).__name__, type(ex).__name__, ex))
+                                            '  Reason (%s): %s\n'
+                                            'Cause:\n%s' %
+                                            (type(self).__name__, type(ex).__name__, ex, cause))
 
     def _run(self):
         raise ActionInvocationException('%s.run not implemented' % type(self).__name__)

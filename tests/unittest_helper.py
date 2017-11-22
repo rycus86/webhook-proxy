@@ -49,12 +49,12 @@ class ActionTestBase(unittest.TestCase):
         server = Server([{'/testing': {'actions': actions}}])
 
         server.app.testing = True
-        self.client = server.app.test_client()
+        client = server.app.test_client()
 
         with capture_stream() as sout:
-            response = self.client.post('/testing',
-                                        headers=self._headers, data=json.dumps(body),
-                                        content_type='application/json')
+            response = client.post('/testing',
+                                   headers=self._headers, data=json.dumps(body),
+                                   content_type='application/json')
 
             self.assertEqual(expected_status_code, response.status_code)
 

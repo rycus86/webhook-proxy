@@ -34,7 +34,7 @@ class DockerAction(Action):
 
         result = self.command(**arguments)
 
-        if not isinstance(result, str) and hasattr(result, 'decode'):
+        if result is not None and not isinstance(result, str) and hasattr(result, 'decode'):
             result = result.decode()
 
         print(self._render_with_template(self.output_format, result=result))

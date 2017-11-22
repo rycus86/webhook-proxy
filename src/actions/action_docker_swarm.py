@@ -110,7 +110,7 @@ class DockerSwarmAction(DockerAction):
 
         for key, value_type in task_template_keys.items():
             if key in kwargs:
-                task_template_args[key] = task_template_keys[key](kwargs[key])
+                task_template_args[key] = task_template_keys[key](**kwargs[key])
 
         if kwargs.get('force_update', False):
             if docker_version_less_than(self.client.api.api_version, '1.25'):

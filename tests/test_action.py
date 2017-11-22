@@ -19,6 +19,20 @@ class ActionTest(ActionTestBase):
 
         self.assertEqual(output, 'HTTP POST /testing')
 
+    def test_evaluate(self):
+        actions = [{'execute': {
+            'command': 'echo -n "Hello"', 
+            'output': '{% set _ = context.set("message", result) %}'
+        }}, {
+            'eval': {
+                'block': 'Hello=={{ context.message }}'
+            }
+        }]
+
+        output = self._invoke(actions)
+
+        self.assertEqual(output, 'Hello==Hello')
+
     def test_custom_action(self):
         @action('for-test')
         class TestAction(Action):
