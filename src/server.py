@@ -31,12 +31,12 @@ class Server(object):
         metrics = PrometheusMetrics(self.app)
 
         metrics.info('flask_app_info', 'Application info',
-                     version=os.environ.get('GIT_COMMIT', 'unknown'))
+                     version=os.environ.get('GIT_COMMIT') or 'unknown')
 
         metrics.info(
             'flask_app_built_at', 'Application build timestamp'
         ).set(
-            float(os.environ.get('BUILD_TIMESTAMP', '0'))
+            float(os.environ.get('BUILD_TIMESTAMP') or '0')
         )
 
         action_summary = Summary(
