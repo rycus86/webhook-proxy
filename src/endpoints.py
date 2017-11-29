@@ -12,14 +12,13 @@ from util import ConfigurationException
 
 
 class Endpoint(object):
-    def __init__(self, app, route, settings):
+    def __init__(self, route, settings, action_metrics):
         if not route:
             raise ConfigurationException('An endpoint must have its route defined')
 
         if settings is None:
             settings = dict()
 
-        self._app = app
         self._route = route
         self._method = settings.get('method', 'POST')
         self._async = settings.get('async', False)
@@ -29,6 +28,8 @@ class Endpoint(object):
         self._actions = list(Action.create(name, **(action_settings if action_settings else dict()))
                              for action_item in settings.get('actions', list())
                              for name, action_settings in action_item.items())
+
+        self._action_metrics = action_metrics
 
     def setup(self, app):
         @app.route(self._route, endpoint=self._route[1:], methods=[self._method])
@@ -59,7 +60,7 @@ class Endpoint(object):
         for idx, action in enumerate(self._actions):
             labels = (self._route, self._method, action.action_name, idx)
 
-            with self._app.action_metrics.labels(*labels).time():
+            with self._action_metrics.labels(*labels).time():
                 action.run()
 
     def _safe_run_actions(self, app, request_environment, json):

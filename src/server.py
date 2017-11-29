@@ -17,9 +17,9 @@ class Server(object):
 
         self.app = Flask(__name__)
         
-        self._setup_metrics()
+        action_metrics = self._setup_metrics()
 
-        endpoints = [Endpoint(self.app, route, settings)
+        endpoints = [Endpoint(route, settings, action_metrics)
                      for config in endpoint_configurations
                      for route, settings in config.items()]
 
@@ -35,7 +35,7 @@ class Server(object):
             labelnames=('http_route', 'http_method', 'action_type', 'action_index')
         )
 
-        setattr(self.app, 'action_metrics', action_summary)
+        return action_summary
 
     def run(self):
         self.app.run(host=self.host, port=self.port, threaded=True)

@@ -9,6 +9,8 @@ from unittest_helper import unregister_metrics
 
 class ServerTest(unittest.TestCase):
     def setUp(self):
+        unregister_metrics()
+
         self.server = Server([
             {
                 '/testing': {
