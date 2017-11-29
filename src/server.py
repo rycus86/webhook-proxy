@@ -1,5 +1,6 @@
+import os
+
 from flask import Flask
-from prometheus_client import CollectorRegistry
 from prometheus_client import Summary
 from prometheus_flask_exporter import PrometheusMetrics
 
@@ -27,7 +28,16 @@ class Server(object):
             endpoint.setup(self.app)
 
     def _setup_metrics(self):
-        PrometheusMetrics(self.app)
+        metrics = PrometheusMetrics(self.app)
+
+        metrics.info('flask_app_info', 'Application info',
+                     version=os.environ.get('GIT_COMMIT', 'unknown'))
+
+        metrics.info(
+            'flask_app_built_at', 'Application build timestamp'
+        ).set(
+            float(os.environ.get('BUILD_TIMESTAMP', '0'))
+        )
 
         action_summary = Summary(
             'webhook_proxy_actions',
