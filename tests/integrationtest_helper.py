@@ -133,6 +133,10 @@ class IntegrationTestBase(unittest.TestCase):
     def request(cls, uri, **json):
         return requests.post('http://%s:9003%s' % (cls.DIND_HOST, uri), json=json)
 
+    @classmethod
+    def metrics(cls):
+        return requests.get('http://%s:9003/metrics' % cls.DIND_HOST)
+
     def setUp(self):
         self.started_containers = list()
 

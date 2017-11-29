@@ -245,3 +245,67 @@ class ServerTest(unittest.TestCase):
 
         finally:
             sys.stdout = _stdout
+
+    def test_metrics(self):
+        self.server = Server([
+            {
+                '/test/post': {
+                    'async': True,
+                    'actions': [
+                        {'sleep': {'seconds': 0.01}},
+                        {'log': {}}
+                    ]
+                },
+                '/test/put': {
+                    'method': 'PUT',
+                    'actions': [
+                        {'log': {}},
+                        {'execute': {'command': 'echo "Executing command"'}}
+                    ]
+                }
+            }
+        ])
+
+        self.server.app.testing = True
+        self.client = self.server.app.test_client()
+
+        for _ in range(2):
+            response = self.client.post('/test/post',
+                                        data=json.dumps({'unused': 1}),
+                                        content_type='application/json')
+
+            self.assertEqual(response.status_code, 200)
+
+        for _ in range(3):
+            response = self.client.put('/test/put',
+                                       data=json.dumps({'unused': 1}),
+                                       content_type='application/json')
+
+            self.assertEqual(response.status_code, 200)
+
+        time.sleep(0.1)
+
+        response = self.client.get('/metrics')
+
+        self.assertEqual(response.status_code, 200)
+
+        metrics = response.data.encode('utf-8')
+
+        self.assertIn('flask_http_request_duration_seconds_bucket{le="5.0",method="POST",path="/test/post",status="200"} 2.0', metrics)
+        self.assertIn('flask_http_request_duration_seconds_count{method="POST",path="/test/post",status="200"} 2.0', metrics)
+        self.assertIn('flask_http_request_duration_seconds_sum{method="POST",path="/test/post",status="200"}', metrics)
+
+        self.assertIn('flask_http_request_duration_seconds_bucket{le="0.5",method="PUT",path="/test/put",status="200"} 3.0', metrics)
+        self.assertIn('flask_http_request_duration_seconds_count{method="PUT",path="/test/put",status="200"} 3.0', metrics)
+        self.assertIn('flask_http_request_duration_seconds_sum{method="PUT",path="/test/put",status="200"}', metrics)
+
+        self.assertIn('webhook_proxy_actions_count{action_index="0",action_type="sleep",http_method="POST",http_route="/test/post"} 2.0', metrics)
+        self.assertIn('webhook_proxy_actions_sum{action_index="0",action_type="sleep",http_method="POST",http_route="/test/post"}', metrics)
+        self.assertIn('webhook_proxy_actions_count{action_index="1",action_type="log",http_method="POST",http_route="/test/post"} 2.0', metrics)
+        self.assertIn('webhook_proxy_actions_sum{action_index="1",action_type="log",http_method="POST",http_route="/test/post"}', metrics)
+
+        self.assertIn('webhook_proxy_actions_count{action_index="0",action_type="log",http_method="PUT",http_route="/test/put"} 3.0', metrics)
+        self.assertIn('webhook_proxy_actions_sum{action_index="0",action_type="log",http_method="PUT",http_route="/test/put"}', metrics)
+        self.assertIn('webhook_proxy_actions_count{action_index="1",action_type="execute",http_method="PUT",http_route="/test/put"} 3.0', metrics)
+        self.assertIn('webhook_proxy_actions_sum{action_index="1",action_type="execute",http_method="PUT",http_route="/test/put"}', metrics)
+

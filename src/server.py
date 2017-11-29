@@ -1,4 +1,7 @@
 from flask import Flask
+from prometheus_client import CollectorRegistry
+from prometheus_client import Summary
+from prometheus_flask_exporter import PrometheusMetrics
 
 from endpoints import Endpoint
 from util import ConfigurationException
@@ -12,14 +15,30 @@ class Server(object):
         if not endpoint_configurations:
             raise ConfigurationException('No endpoints defined')
 
-        endpoints = [Endpoint(route, settings)
+        self.app = Flask(__name__)
+        
+        self._setup_metrics()
+
+        endpoints = [Endpoint(self.app, route, settings)
                      for config in endpoint_configurations
                      for route, settings in config.items()]
 
-        self.app = Flask(__name__)
-
         for endpoint in endpoints:
             endpoint.setup(self.app)
+
+    def _setup_metrics(self):
+        registry = CollectorRegistry(auto_describe=True)
+        
+        PrometheusMetrics(self.app, registry=registry)
+
+        action_summary = Summary(
+            'webhook_proxy_actions',
+            'Action invocation metrics',
+            labelnames=('http_route', 'http_method', 'action_type', 'action_index'),
+            registry=registry
+        )
+
+        setattr(self.app, 'action_metrics', action_summary)
 
     def run(self):
         self.app.run(host=self.host, port=self.port, threaded=True)

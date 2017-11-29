@@ -3,3 +3,4 @@ flask
 jinja2
 pyYAML
 requests
+prometheus-flask-exporter
