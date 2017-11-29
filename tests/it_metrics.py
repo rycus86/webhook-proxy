@@ -23,7 +23,7 @@ class MetricsIntegrationTest(IntegrationTestBase):
 
         self.prepare_file('test-51.yml', config)
 
-        container = self.start_app_container('test-51.yml')
+        self.start_app_container('test-51.yml')
 
         response = self.request('/test/metrics', content='sample')
 
@@ -35,8 +35,20 @@ class MetricsIntegrationTest(IntegrationTestBase):
         
         metrics = response.text
 
-        self.assertIn('flask_http_request_duration_seconds_count{method="POST",path="/test/metrics",status="200"} 1.0', metrics)
-        self.assertIn('webhook_proxy_actions_count{action_index="0",action_type="log",http_method="POST",http_route="/test/metrics"} 1.0', metrics)
-        self.assertIn('webhook_proxy_actions_count{action_index="1",action_type="log",http_method="POST",http_route="/test/metrics"} 1.0', metrics)
-        self.assertIn('webhook_proxy_actions_count{action_index="2",action_type="log",http_method="POST",http_route="/test/metrics"} 1.0', metrics)
+        self.assertIn('python_info{', metrics)
+        self.assertIn('process_start_time_seconds ', metrics)
 
+        self.assertIn('flask_http_request_total{'
+                      'method="POST",status="200"} 1.0', metrics)
+        self.assertIn('flask_http_request_duration_seconds_count{'
+                      'method="POST",path="/test/metrics",status="200"} 1.0', metrics)
+
+        self.assertIn('webhook_proxy_actions_count{'
+                      'action_index="0",action_type="log",'
+                      'http_method="POST",http_route="/test/metrics"} 1.0', metrics)
+        self.assertIn('webhook_proxy_actions_count{'
+                      'action_index="1",action_type="log",'
+                      'http_method="POST",http_route="/test/metrics"} 1.0', metrics)
+        self.assertIn('webhook_proxy_actions_count{'
+                      'action_index="2",action_type="log",'
+                      'http_method="POST",http_route="/test/metrics"} 1.0', metrics)

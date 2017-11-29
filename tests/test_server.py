@@ -4,6 +4,7 @@ import time
 import unittest
 
 from server import Server, ConfigurationException
+from unittest_helper import unregister_metrics
 
 
 class ServerTest(unittest.TestCase):
@@ -26,6 +27,9 @@ class ServerTest(unittest.TestCase):
 
         self.server.app.testing = True
         self.client = self.server.app.test_client()
+
+    def tearDown(self):
+        unregister_metrics()
 
     def test_valid_request(self):
         headers = {
@@ -171,10 +175,15 @@ class ServerTest(unittest.TestCase):
         self.assertRaises(ConfigurationException, Server, list())
 
     def test_missing_endpoint_route_throws_exception(self):
+        unregister_metrics()
         self.assertRaises(ConfigurationException, Server, [{None: {'method': 'GET'}}])
+
+        unregister_metrics()
         self.assertRaises(ConfigurationException, Server, [{'': {'method': 'GET'}}])
 
     def test_empty_endpoint_settings_accept_empty_body(self):
+        unregister_metrics()
+
         server = Server([{'/empty': None}])
 
         server.app.testing = True
@@ -185,6 +194,8 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_request(self):
+        unregister_metrics()
+
         server = Server([{'/get': {'method': 'GET', 'headers': {'X-Method': '(GET|HEAD)'}}}])
         
         server.app.testing = True
@@ -199,6 +210,8 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(409, response.status_code)
 
     def test_async_request(self):
+        unregister_metrics()
+
         self.server = Server([
             {
                 '/testing': {
@@ -247,6 +260,8 @@ class ServerTest(unittest.TestCase):
             sys.stdout = _stdout
 
     def test_metrics(self):
+        unregister_metrics()
+
         self.server = Server([
             {
                 '/test/post': {
@@ -289,23 +304,52 @@ class ServerTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        metrics = response.data.encode('utf-8')
+        metrics = response.data.decode('utf-8')
 
-        self.assertIn('flask_http_request_duration_seconds_bucket{le="5.0",method="POST",path="/test/post",status="200"} 2.0', metrics)
-        self.assertIn('flask_http_request_duration_seconds_count{method="POST",path="/test/post",status="200"} 2.0', metrics)
-        self.assertIn('flask_http_request_duration_seconds_sum{method="POST",path="/test/post",status="200"}', metrics)
+        self.assertIn('python_info{', metrics)
+        self.assertIn('process_start_time_seconds ', metrics)
 
-        self.assertIn('flask_http_request_duration_seconds_bucket{le="0.5",method="PUT",path="/test/put",status="200"} 3.0', metrics)
-        self.assertIn('flask_http_request_duration_seconds_count{method="PUT",path="/test/put",status="200"} 3.0', metrics)
-        self.assertIn('flask_http_request_duration_seconds_sum{method="PUT",path="/test/put",status="200"}', metrics)
+        self.assertIn('flask_http_request_total{'
+                      'method="POST",status="200"} 2.0', metrics)
+        self.assertIn('flask_http_request_total{'
+                      'method="PUT",status="200"} 3.0', metrics)
 
-        self.assertIn('webhook_proxy_actions_count{action_index="0",action_type="sleep",http_method="POST",http_route="/test/post"} 2.0', metrics)
-        self.assertIn('webhook_proxy_actions_sum{action_index="0",action_type="sleep",http_method="POST",http_route="/test/post"}', metrics)
-        self.assertIn('webhook_proxy_actions_count{action_index="1",action_type="log",http_method="POST",http_route="/test/post"} 2.0', metrics)
-        self.assertIn('webhook_proxy_actions_sum{action_index="1",action_type="log",http_method="POST",http_route="/test/post"}', metrics)
+        self.assertIn('flask_http_request_duration_seconds_bucket{'
+                      'le="5.0",method="POST",path="/test/post",status="200"} 2.0', metrics)
+        self.assertIn('flask_http_request_duration_seconds_count{'
+                      'method="POST",path="/test/post",status="200"} 2.0', metrics)
+        self.assertIn('flask_http_request_duration_seconds_sum{'
+                      'method="POST",path="/test/post",status="200"}', metrics)
 
-        self.assertIn('webhook_proxy_actions_count{action_index="0",action_type="log",http_method="PUT",http_route="/test/put"} 3.0', metrics)
-        self.assertIn('webhook_proxy_actions_sum{action_index="0",action_type="log",http_method="PUT",http_route="/test/put"}', metrics)
-        self.assertIn('webhook_proxy_actions_count{action_index="1",action_type="execute",http_method="PUT",http_route="/test/put"} 3.0', metrics)
-        self.assertIn('webhook_proxy_actions_sum{action_index="1",action_type="execute",http_method="PUT",http_route="/test/put"}', metrics)
+        self.assertIn('flask_http_request_duration_seconds_bucket{'
+                      'le="0.5",method="PUT",path="/test/put",status="200"} 3.0', metrics)
+        self.assertIn('flask_http_request_duration_seconds_count{'
+                      'method="PUT",path="/test/put",status="200"} 3.0', metrics)
+        self.assertIn('flask_http_request_duration_seconds_sum{'
+                      'method="PUT",path="/test/put",status="200"}', metrics)
 
+        self.assertIn('webhook_proxy_actions_count{'
+                      'action_index="0",action_type="sleep",'
+                      'http_method="POST",http_route="/test/post"} 2.0', metrics)
+        self.assertIn('webhook_proxy_actions_sum{'
+                      'action_index="0",action_type="sleep",'
+                      'http_method="POST",http_route="/test/post"}', metrics)
+        self.assertIn('webhook_proxy_actions_count{'
+                      'action_index="1",action_type="log",'
+                      'http_method="POST",http_route="/test/post"} 2.0', metrics)
+        self.assertIn('webhook_proxy_actions_sum{'
+                      'action_index="1",action_type="log",'
+                      'http_method="POST",http_route="/test/post"}', metrics)
+
+        self.assertIn('webhook_proxy_actions_count{'
+                      'action_index="0",action_type="log",'
+                      'http_method="PUT",http_route="/test/put"} 3.0', metrics)
+        self.assertIn('webhook_proxy_actions_sum{'
+                      'action_index="0",action_type="log",'
+                      'http_method="PUT",http_route="/test/put"}', metrics)
+        self.assertIn('webhook_proxy_actions_count{'
+                      'action_index="1",action_type="execute",'
+                      'http_method="PUT",http_route="/test/put"} 3.0', metrics)
+        self.assertIn('webhook_proxy_actions_sum{'
+                      'action_index="1",action_type="execute",'
+                      'http_method="PUT",http_route="/test/put"}', metrics)

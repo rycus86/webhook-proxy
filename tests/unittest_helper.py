@@ -3,6 +3,7 @@ import sys
 import unittest
 
 from server import Server
+from prometheus_client import REGISTRY
 
 
 def capture_stream(stream='stdout', echo=False):
@@ -35,9 +36,22 @@ def capture_stream(stream='stdout', echo=False):
     return CapturedContext()
 
 
+def unregister_metrics():
+    for collector, names in tuple(REGISTRY._collector_to_names.items()):
+        if any(name.startswith('flask_http_') or
+               name.startswith('webhook_proxy_')
+               for name in names):
+
+            REGISTRY.unregister(collector)
+
+
 class ActionTestBase(unittest.TestCase):
+    _server = None
     _headers = {'Content-Type': 'application/json'}
     _body = {'testing': True}
+
+    def tearDown(self):
+        unregister_metrics()
 
     def _invoke(self, actions, expected_status_code=200, body=None):
         if not isinstance(actions, list):
@@ -46,10 +60,14 @@ class ActionTestBase(unittest.TestCase):
         if not body:
             body = self._body
 
+        unregister_metrics()
+
         server = Server([{'/testing': {'actions': actions}}])
 
         server.app.testing = True
         client = server.app.test_client()
+
+        self._server = server
 
         with capture_stream() as sout:
             response = client.post('/testing',

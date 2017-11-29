@@ -27,15 +27,12 @@ class Server(object):
             endpoint.setup(self.app)
 
     def _setup_metrics(self):
-        registry = CollectorRegistry(auto_describe=True)
-        
-        PrometheusMetrics(self.app, registry=registry)
+        PrometheusMetrics(self.app)
 
         action_summary = Summary(
             'webhook_proxy_actions',
             'Action invocation metrics',
-            labelnames=('http_route', 'http_method', 'action_type', 'action_index'),
-            registry=registry
+            labelnames=('http_route', 'http_method', 'action_type', 'action_index')
         )
 
         setattr(self.app, 'action_metrics', action_summary)
