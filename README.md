@@ -72,6 +72,7 @@ Each endpoint supports the following configuration (all optional):
 | method   | HTTP method supported on the endpoint           | `POST`  |
 | headers  | HTTP header validation rules as a dictionary of names to regular expressions  | `empty` |
 | body     | Validation rules for the JSON payload in the request body                     | `empty` |
+| async    | Execute the action asynchronously               | `False` |
 | actions  | List of actions to execute for valid requests.  | `empty` |
 
 The message body validation supports lists too, the `project.item.name` in the example would accept
