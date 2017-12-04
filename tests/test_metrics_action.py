@@ -1,4 +1,4 @@
-from unittest_helper import ActionTestBase
+from unittest_helper import ActionTestBase, unregister_metrics
 
 from util import ConfigurationException
 
@@ -13,6 +13,8 @@ class MetricsActionTest(ActionTestBase):
         self.assertIn('test_histogram_count 1.0', self.metrics())
         self.assertIn('test_histogram_sum 0.', self.metrics())
         self.assertIn('test_histogram_bucket{le=', self.metrics())
+
+        unregister_metrics()
 
         output = self._invoke({'metrics': {'histogram': dict(
             name='test_histogram_with_labels', help='Test Histogram',
@@ -33,6 +35,8 @@ class MetricsActionTest(ActionTestBase):
         self.assertIn('test_summary_count 1.0', self.metrics())
         self.assertIn('test_summary_sum 0.', self.metrics())
 
+        unregister_metrics()
+
         output = self._invoke({'metrics': {'summary': dict(
             name='test_summary_with_labels', help='Test Summary',
             labels={'path': '{{ request.path }}'}
@@ -50,6 +54,8 @@ class MetricsActionTest(ActionTestBase):
         self.assertEqual(output, 'Tracking metrics: test_gauge')
         self.assertIn('test_gauge 0.0', self.metrics())
 
+        unregister_metrics()
+
         output = self._invoke({'metrics': {'gauge': dict(
             name='test_gauge_with_labels', help='Test Gauge',
             labels={'target': '{{ request.json.target }}'}
@@ -66,13 +72,15 @@ class MetricsActionTest(ActionTestBase):
         self.assertEqual(output, 'Tracking metrics: test_counter')
         self.assertIn('test_counter 1.0', self.metrics())
 
+        unregister_metrics()
+
         output = self._invoke({'metrics': {'counter': dict(
             name='test_counter_with_labels', help='Test Counter',
-            labels={'path': '{{ request.path }}'}
+            labels={'code': '{{ response.status_code }}'}
         )}})
 
         self.assertEqual(output, 'Tracking metrics: test_counter_with_labels')
-        self.assertIn('test_counter_with_labels{path="/testing"} 1.0', self.metrics())
+        self.assertIn('test_counter_with_labels{code="200"} 1.0', self.metrics())
 
     def test_invalid_metric(self):
         self.assertRaises(ConfigurationException, self._invoke, {'metrics': {'unknown': {}}})

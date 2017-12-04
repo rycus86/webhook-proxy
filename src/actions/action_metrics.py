@@ -76,10 +76,12 @@ class MetricsAction(Action):
         except TypeError:
             before_request_call, after_request_call = None, metric_calls
 
-        def target_metric():
+        def target_metric(response):
             if label_names:
                 return metric.labels(
-                    *map(lambda key: self._render_with_template(labels.get(key)).strip(), label_names)
+                    *map(lambda key: self._render_with_template(
+                        labels.get(key), response=response
+                    ).strip(), label_names)
                 )
 
             else:
@@ -90,7 +92,7 @@ class MetricsAction(Action):
                 return
 
             if before_request_call:
-                before_request_call(target_metric())
+                before_request_call(target_metric(response=None))
 
             request.whp_start_time = default_timer()
 
@@ -100,7 +102,7 @@ class MetricsAction(Action):
 
             total_time = max(default_timer() - request.whp_start_time, 0)
 
-            after_request_call(target_metric(), total_time)
+            after_request_call(target_metric(response=response), total_time)
 
             return response
 

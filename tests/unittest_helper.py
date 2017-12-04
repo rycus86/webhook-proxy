@@ -38,8 +38,7 @@ def capture_stream(stream='stdout', echo=False):
 
 def unregister_metrics():
     for collector, names in tuple(REGISTRY._collector_to_names.items()):
-        if any(name.startswith('flask_http_') or
-               name.startswith('flask_app_') or
+        if any(name.startswith('flask_') or
                name.startswith('webhook_proxy_')
                for name in names):
 

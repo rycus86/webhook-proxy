@@ -352,7 +352,10 @@ one metric registration from the table below.
 
 | key | description | default | templated | required |
 | --- | ----------- | ------- | --------- | -------- |
-| histogram | Number of seconds to sleep for | | yes | yes | 
+| histogram | Registers a Histogram | | yes (labels) | yes (one) | 
+| summary   | Registers a Summary   | | yes (labels) | yes (one) |
+| gauge     | Registers a Gauge     | | yes (labels) | yes (one) |
+| counter   | Registers a Counter   | | yes (labels) | yes (one) |
 | message | The message template to print on the standard output | `Waiting {{ seconds }} seconds before continuing ...` | yes | no |
 | output | Output template for printing the result on the standard output         | `Tracking metrics: {{ metric }}`       | yes | no |
 
@@ -360,6 +363,9 @@ Note that the `name` configuration is mandatory for metrics.
 Also note that metric labels are accepted as a dictionary where
 the value can be templated and will be evaluated within
 the Flask request context.
+The templates also have access to the Flask `response` object
+(with the `gauge` being the exception as it is also evaluated
+before the request to track in-progress executions).
 
 For example:
 
