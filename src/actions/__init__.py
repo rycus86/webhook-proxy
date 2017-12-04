@@ -36,6 +36,7 @@ def _register_available_actions():
     from actions.action_execute import ExecuteAction
     from actions.action_evaluate import EvaluateAction
     from actions.action_sleep import SleepAction
+    from actions.action_metrics import MetricsAction
 
     with _safe_import():
         from actions.action_http import HttpAction

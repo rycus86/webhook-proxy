@@ -9,6 +9,8 @@ from util import ConfigurationException
 
 
 class Server(object):
+    app = None
+
     def __init__(self, endpoint_configurations, host='127.0.0.1', port=5000):
         self.host = host
         self.port = port
@@ -16,8 +18,8 @@ class Server(object):
         if not endpoint_configurations:
             raise ConfigurationException('No endpoints defined')
 
-        self.app = Flask(__name__)
-        
+        Server.app = Flask(__name__)
+
         action_metrics = self._setup_metrics()
 
         endpoints = [Endpoint(route, settings, action_metrics)
