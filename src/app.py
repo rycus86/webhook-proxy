@@ -18,6 +18,7 @@ def handle_signal(num, _):
     else:
         exit(1)
 
+
 if __name__ == '__main__':
     settings = parse_settings(sys.argv[1]) if len(sys.argv) == 2 else parse_settings()
     
