@@ -340,6 +340,45 @@ relies on the outcome that would only happen a little bit later.
 | seconds | Number of seconds to sleep for | | yes | yes | 
 | message | The message template to print on the standard output | `Waiting {{ seconds }} seconds before continuing ...` | yes | no |
 
+#### metrics
+
+The application exposes [Prometheus](https://prometheus.io/) metrics
+about the number of calls and the execution times of the endpoints.
+
+The `metrics` action registers a new metric in addition that
+tracks the entire execution of the endpoint (not only the action).
+Apart from the optional `output` configuration it has to contain
+one metric registration from the table below.
+
+| key | description | default | templated | required |
+| --- | ----------- | ------- | --------- | -------- |
+| histogram | Number of seconds to sleep for | | yes | yes | 
+| message | The message template to print on the standard output | `Waiting {{ seconds }} seconds before continuing ...` | yes | no |
+| output | Output template for printing the result on the standard output         | `Tracking metrics: {{ metric }}`       | yes | no |
+
+Note that the `name` configuration is mandatory for metrics.
+Also note that metric labels are accepted as a dictionary where
+the value can be templated and will be evaluated within
+the Flask request context.
+
+For example:
+
+```yaml
+...
+  actions:
+    - metrics:
+        gauge:
+          name: requests_in_progress
+          help: Tracks current requests in progress
+          
+    - metrics:
+        summary:
+          name: request_summary
+          labels:
+            path: '{{ request.path }}'
+...
+```
+
 ## Docker
 
 The application can be run in *Docker* containers using images based on *Alpine Linux*

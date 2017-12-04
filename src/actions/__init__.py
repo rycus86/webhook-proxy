@@ -17,7 +17,7 @@ def _safe_import():
             pass
 
         def __exit__(self, exc_type, exc_val, exc_tb):
-            if exc_type is ImportError:
+            if exc_tb:
                 error_file = traceback.extract_tb(exc_tb)[1][0]
                 name, _ = os.path.splitext(os.path.basename(error_file))
 
