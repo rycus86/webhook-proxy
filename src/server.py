@@ -5,18 +5,22 @@ from prometheus_client import Summary
 from prometheus_flask_exporter import PrometheusMetrics
 
 from endpoints import Endpoint
-from util import ConfigurationException
+from util import ConfigurationException, import_action_module
 
 
 class Server(object):
     app = None
 
-    def __init__(self, endpoint_configurations, host='127.0.0.1', port=5000):
+    def __init__(self, endpoint_configurations, host='127.0.0.1', port=5000, imports=None):
         self.host = host
         self.port = port
 
         if not endpoint_configurations:
             raise ConfigurationException('No endpoints defined')
+
+        if imports:
+            for path in imports:
+                import_action_module(path)
 
         Server.app = Flask(__name__)
 

@@ -106,6 +106,9 @@ class Action(object):
 
     @classmethod
     def register(cls, name, action_type):
+        if name in cls._registered_actions:
+            raise ConfigurationException('Action already registered: %s' % name)
+
         cls._registered_actions[name] = action_type
 
     @classmethod

@@ -58,8 +58,16 @@ The `server` section defines settings for the HTTP server receiving the webhook 
 | --- | ----------- | ------- | -------- |
 | host | The host name or address for the server to listen on  | `127.0.0.1` | no |
 | port | The port number to accept incoming connections on     | `5000`      | no |
+| imports | Python modules (as list of file paths) to import for registering additional actions | `None` | no |
 
 Set the `host` to `0.0.0.0` to accept connections from any hosts.
+
+The `imports` property has to be a `list` and should point to the `.py` files.
+They will be copied temporarily into the `TMP_IMPORT_DIR` folder (`/tmp` by default,
+override with the environment variable) then renamed to a random filename and
+finally imported as a module so that we can load multiple modules with the same
+filename from different paths.
+Also note that because of this, we cannot rely on the module `__name__`.
 
 ### endpoints
 

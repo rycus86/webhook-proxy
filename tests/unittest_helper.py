@@ -53,7 +53,7 @@ class ActionTestBase(unittest.TestCase):
     def tearDown(self):
         unregister_metrics()
 
-    def _invoke(self, actions, expected_status_code=200, body=None):
+    def _invoke(self, actions, expected_status_code=200, body=None, **kwargs):
         if not isinstance(actions, list):
             actions = [actions]
 
@@ -62,7 +62,7 @@ class ActionTestBase(unittest.TestCase):
 
         unregister_metrics()
 
-        server = Server([{'/testing': {'actions': actions}}])
+        server = Server([{'/testing': {'actions': actions}}], **kwargs)
 
         server.app.testing = True
         client = server.app.test_client()
