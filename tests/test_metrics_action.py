@@ -96,20 +96,21 @@ class MetricsActionTest(ActionTestBase):
                     }]
                 },
                 '/two': {
-                    'actions': [{
-                        'metrics': {
-                            'counter': {'name': 'metric_two'}
-                        }
-                    },
-                    {
-                        'metrics': {
-                            'counter': {'name': 'metric_xyz'}
-                        }
-                    }]
+                    'actions': [
+                        {
+                            'metrics': {
+                                'counter': {'name': 'metric_two'}
+                            }
+                        },
+                        {
+                            'metrics': {
+                                'counter': {'name': 'metric_xyz'}
+                            }
+                        }]
                 }
             }
         ])
-        
+
         server.app.testing = True
         client = server.app.test_client()
 
@@ -117,21 +118,21 @@ class MetricsActionTest(ActionTestBase):
 
         client.post('/one', headers={'Content-Type': 'application/json'},
                     data='{"test":"1"}', content_type='application/json')
-        
+
         self.assertIn('metric_one 1.0', self.metrics())
         self.assertIn('metric_two 0.0', self.metrics())
         self.assertIn('metric_xyz 0.0', self.metrics())
 
         client.post('/one', headers={'Content-Type': 'application/json'},
                     data='{"test":"2"}', content_type='application/json')
-        
+
         self.assertIn('metric_one 2.0', self.metrics())
         self.assertIn('metric_two 0.0', self.metrics())
         self.assertIn('metric_xyz 0.0', self.metrics())
 
         client.post('/two', headers={'Content-Type': 'application/json'},
                     data='{"test":"3"}', content_type='application/json')
-        
+
         self.assertIn('metric_one 2.0', self.metrics())
         self.assertIn('metric_two 1.0', self.metrics())
         self.assertIn('metric_xyz 1.0', self.metrics())

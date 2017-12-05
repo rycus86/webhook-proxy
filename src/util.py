@@ -3,6 +3,8 @@ import sys
 import time
 import random
 
+import six
+
 
 class ConfigurationException(Exception):
     pass
@@ -29,7 +31,16 @@ def import_action_module(file_path):
         sys.path.insert(0, directory)
 
         try:
-            __import__(module_name)
+            if six.PY3:
+                import importlib
+
+                spec = importlib.util.spec_from_file_location(module_name, tmp_file_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+
+            else:
+                __import__(module_name)
+
         finally:
             sys.path[:] = sys_path
 
@@ -48,4 +59,3 @@ def import_action_module(file_path):
 
         if os.path.exists(tmp_file_path):
             os.remove(tmp_file_path)
-

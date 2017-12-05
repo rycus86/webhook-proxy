@@ -1,5 +1,4 @@
 import os
-import unittest
 
 from util import ConfigurationException
 
@@ -44,4 +43,3 @@ class ImportTest(ActionTestBase):
         self.assertRaises(ConfigurationException, self._invoke, list(), imports=['not-found'])
         self.assertRaises(ConfigurationException, self._invoke, list(),
                           imports=[os.path.join(self.base_dir, 'invalid.py')])
-
