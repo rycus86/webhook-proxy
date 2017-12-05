@@ -13,8 +13,10 @@ from util import ConfigurationException
 class MetricsAction(Action):
     def __init__(self, output='Tracking metrics: {{ metric }}', **kwargs):
         from server import Server
+        from endpoints import Endpoint
 
         self._app = Server.app
+        self._endpoint = Endpoint.current
         self._name = None
 
         if len(kwargs) != 1:
@@ -88,7 +90,7 @@ class MetricsAction(Action):
                 return metric
 
         def before_request():
-            if request.path == '/metrics':
+            if request.path != self._endpoint.route:
                 return
 
             if before_request_call:
@@ -97,7 +99,7 @@ class MetricsAction(Action):
             request.whp_start_time = default_timer()
 
         def after_request(response):
-            if request.path == '/metrics':
+            if request.path != self._endpoint.route:
                 return response
 
             total_time = max(default_timer() - request.whp_start_time, 0)
