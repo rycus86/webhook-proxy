@@ -31,7 +31,12 @@ def import_action_module(file_path):
         sys.path.insert(0, directory)
 
         try:
-            if six.PY3:
+            if six.PY34:
+                import importlib.machinery
+                loader = importlib.machinery.SourceFileLoader(module_name, tmp_file_path)
+                loader.load_module()
+
+            elif six.PY3:
                 import importlib
 
                 spec = importlib.util.spec_from_file_location(module_name, tmp_file_path)
