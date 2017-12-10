@@ -13,7 +13,7 @@ class Server(object):
 
     def __init__(self, endpoint_configurations, host='127.0.0.1', port=5000, imports=None):
         self.host = host
-        self.port = port
+        self.port = int(port)
 
         if not endpoint_configurations:
             raise ConfigurationException('No endpoints defined')
