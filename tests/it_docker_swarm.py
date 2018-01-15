@@ -144,7 +144,7 @@ class DockerSwarmIntegrationTest(IntegrationTestBase):
 
         self.wait_for_service_start(service, num_tasks=2)
 
-        self.assertEqual(len(service.tasks(filters={'desired-state': 'running'})), 2)
+        self.assertGreaterEqual(len(service.tasks(filters={'desired-state': 'running'})), 2)
 
     def test_update_service(self):
         config = """
