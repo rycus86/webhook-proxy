@@ -273,7 +273,11 @@ Examples:
         output: 'Compose project stopped'
 ```
 
-#### docker-swarm
+#### docker-swarm (deprecated)
+
+*Since the merge of [docker-py#1807](https://github.com/docker/docker-py/pull/1807),
+this convenience action is no longer necessary.
+The official Docker SDK can handle Swarm service updates nicely.*
 
 The `docker-swarm` action exposes convenience _Docker_ actions for _Swarm_ related operations
 that might require quite a bit of manual work to replicate with the `docker` action.
