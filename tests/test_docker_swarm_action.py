@@ -1,10 +1,7 @@
-import unittest
-
 from unittest_helper import ActionTestBase
 from actions.action_docker_swarm import DockerSwarmAction
 
 
-@unittest.skip('The docker-swarm action is now deprecated')
 class DockerSwarmActionTest(ActionTestBase):
     def setUp(self):
         self.mock_client = MockClient()
@@ -13,8 +10,7 @@ class DockerSwarmActionTest(ActionTestBase):
     def test_restart(self):
         self._invoke({'docker-swarm': {'$restart': {'service_id': 'mock-service'}}})
 
-        self.verify('name', 'mock-service')
-        self.verify('task_template.ForceUpdate', 1)
+        self.verify('force_update', 1)
 
         self.mock_client.service_attributes = {
             'Spec': {'TaskTemplate': {'ForceUpdate': 12}}
@@ -22,12 +18,12 @@ class DockerSwarmActionTest(ActionTestBase):
 
         self._invoke({'docker-swarm': {'$restart': {'service_id': 'fake'}}})
 
-        self.verify('task_template.ForceUpdate', 13)
+        self.verify('force_update', 13)
 
     def test_scale(self):
         self._invoke({'docker-swarm': {'$scale': {'service_id': 'mocked', 'replicas': 12}}})
 
-        self.verify('mode.Replicated.Replicas', 12)
+        self.verify('mode', {'replicated': {'Replicas': 12}})
 
     def test_update(self):
         self._invoke({'docker-swarm': {'$update': {
@@ -35,14 +31,14 @@ class DockerSwarmActionTest(ActionTestBase):
             'image': 'test-image:1.0.y'
         }}})
         
-        self.verify('task_template.ContainerSpec.Image', 'test-image:1.0.y')
+        self.verify('image', 'test-image:1.0.y')
 
         self._invoke({'docker-swarm': {'$update': {
             'service_id': 'updating', 
             'container_labels': [{'test.label': 'test', 'mock.label': 'mock'}]
         }}})
         
-        self.verify('task_template.ContainerSpec.Labels',
+        self.verify('container_labels',
                     [{'test.label': 'test', 'mock.label': 'mock'}])
 
         self._invoke({'docker-swarm': {'$update': {
@@ -57,7 +53,7 @@ class DockerSwarmActionTest(ActionTestBase):
             'resources': {'mem_limit': 512}
         }}})
         
-        self.verify('task_template.Resources.Limits.MemoryBytes', 512)
+        self.verify('resources', {'mem_limit': 512})
 
     def verify(self, key, value):
         def assertPropertyEquals(data, prop):
@@ -79,10 +75,6 @@ class MockClient(object):
         self.service_attributes = None
 
     @property
-    def api(self):
-        return Mock(api_version='1.30', update_service=self.update_service)
-
-    @property
     def services(self):
         return self
 
@@ -102,6 +94,7 @@ class MockClient(object):
             }
         }, 
         reload=lambda: True,
+        update=self.update_service,
         decode=lambda: details)
         
         if self.service_attributes:
@@ -127,3 +120,5 @@ class Mock(dict):
     def __getattr__(self, name):
         return self.get(name)
 
+    def update(self, *args, **kwargs):
+        return self['update'](*args, **kwargs)
