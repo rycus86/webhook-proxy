@@ -1,7 +1,10 @@
+import unittest
+
 from unittest_helper import ActionTestBase
 from actions.action_docker_swarm import DockerSwarmAction
 
 
+@unittest.skip('The docker-swarm action is now deprecated')
 class DockerSwarmActionTest(ActionTestBase):
     def setUp(self):
         self.mock_client = MockClient()
