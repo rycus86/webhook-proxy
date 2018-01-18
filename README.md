@@ -94,6 +94,10 @@ By default, these receive the following objects in their context:
 - `request`   : the incoming _Flask_ request being handled
 - `timestamp` : the Epoch timestamp as `time.time()`
 - `datetime`  : human-readable timestamp as `time.ctime()`
+- `own_container_id`: the ID of the container the app is running in or otherwise `None`
+- `read_config`: helper for reading configuration parameters from key-value files
+  or environment variables and also full configuration files (certificates for example),
+  see [docker_helper](https://github.com/rycus86/docker_helper) for more information and usage
 - `error(..)` : a function with an optional `message` argument to raise errors when evaluating templates
 - `context`   : a thread-local object for passing information from one action to another
 
@@ -170,6 +174,19 @@ _Jinja2_ template as `response`.
 | headers | The HTTP headers (as dictionary) to add to the request  | `empty` | yes | no  |
 | body    | The HTTP body (as string) to send with the request      | `empty` | yes | no  |
 | output  | Output template for printing the response on the standard output | `HTTP {{ response.status_code }} : {{ response.content }}` | yes | no |
+
+#### github-verify
+
+The `github-verify` is a convenience action to validate incoming _GitHub_ webhooks.
+It requires the webhook to be signed with a secret.
+
+| key | description | default | templated | required |
+| --- | ----------- | ------- | --------- | -------- |
+| secret | The webhook secret configured in _GitHub_ | | yes | yes |
+| output  | Output template for printing a message on the standard output | `{{ result }}` | yes | no |
+
+The action will raise an `ActionInvocationException` on failure.
+If that happens, the actions defined after this one will not be executed.
 
 #### docker
 
@@ -525,6 +542,10 @@ endpoints:
               
               {% endfor %}
               Check this change out at {{ request.json.compare }}
+
+        # verify the webhook signature
+        - github-verify:
+            secret: '{{ read_config("GITHUB_SECRET", "/var/run/secrets/github") }}'
 ```
 
 The validators for the `/github` endpoint require that
@@ -543,8 +564,15 @@ printed to the standard output followed by the ID, committer name, timestamp
 and message of each commit in the push.
 The last line displays the URL for the _GitHub_ compare page for the change.
 
+
 For more information about using the _Jinja2_ templates have a look
 at the [official documentation](http://jinja.pocoo.org).
+
+The `github-verify` action will make sure that the webhook is signed as appropriate.
+The _secret_ for this is read either from the `/var/run/secrets/github` file or
+the `GITHUB_SECRET` environment variable.
+
+> In case it is in a file, that file should contain key-value pairs, like `GITHUB_SECRET=TopSecret`
 
 - Update a _Docker Compose_ project on image changes
 
