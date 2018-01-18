@@ -8,6 +8,8 @@ import traceback
 from flask import request
 from jinja2 import Template
 
+import docker_helper
+
 from util import ActionInvocationException, ConfigurationException
 
 
@@ -35,6 +37,7 @@ def _register_available_actions():
     from actions.action_log import LogAction
     from actions.action_execute import ExecuteAction
     from actions.action_evaluate import EvaluateAction
+    from actions.action_github_verify import GitHubVerifyAction
     from actions.action_sleep import SleepAction
     from actions.action_metrics import MetricsAction
 
@@ -96,6 +99,8 @@ class Action(object):
                                datetime=time.ctime(),
                                context=_ContextHelper(),
                                error=self.error,
+                               own_container_id=docker_helper.get_current_container_id(),
+                               read_config=docker_helper.read_configuration,
                                **kwargs)
 
     def error(self, message=''):

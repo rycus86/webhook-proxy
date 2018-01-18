@@ -1,5 +1,10 @@
 from __future__ import print_function
 
+import os
+import unittest
+
+import docker_helper
+
 from actions import action, Action
 from server import ConfigurationException
 from unittest_helper import ActionTestBase, capture_stream
@@ -68,6 +73,22 @@ class ActionTest(ActionTestBase):
             output = output.dumps()
 
         self.assertIn('Failing with : test-failure', output)
+
+    @unittest.skipUnless(os.path.exists('/proc/1/cgroup'),
+                         'Test is not running in a container')
+    def test_log_with_docker_helper(self):
+        actions = [{'log': {
+            'message': 'Running in {{ own_container_id }} '
+                       'with environment: {{ read_config("TESTING_ENV") }}'
+        }}]
+
+        os.environ['TESTING_ENV'] = 'webhook-proxy-testing'
+
+        output = self._invoke(actions)
+
+        expected = 'Running in %s with environment: webhook-proxy-testing' % docker_helper.get_current_container_id()
+
+        self.assertEqual(output, expected)
 
     def test_invalid_action(self):
         actions = [{'invalid': {'Should': 'not work'}}]

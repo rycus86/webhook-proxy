@@ -60,6 +60,8 @@ class ActionTestBase(unittest.TestCase):
         if not body:
             body = self._body
 
+        final_body = kwargs.pop('final_body', json.dumps(body))
+
         unregister_metrics()
 
         server = Server([{'/testing': {'actions': actions}}], **kwargs)
@@ -71,7 +73,7 @@ class ActionTestBase(unittest.TestCase):
 
         with capture_stream() as sout:
             response = client.post('/testing',
-                                   headers=self._headers, data=json.dumps(body),
+                                   headers=self._headers, data=final_body,
                                    content_type='application/json')
 
             self.assertEqual(expected_status_code, response.status_code)
