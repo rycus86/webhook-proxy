@@ -6,6 +6,9 @@ import traceback
 
 import six
 from flask import request
+from jinja2 import Template
+
+import docker_helper
 
 from actions import Action
 from util import ConfigurationException
@@ -118,7 +121,9 @@ class Endpoint(object):
     @staticmethod
     def _accept_headers(headers, rules):
         for key, rule in rules.items():
-            value = headers.get(key, '')
+            value = Template(headers.get(key, '')).render(
+                read_config=docker_helper.read_configuration
+            )
 
             if not re.match(rule, value):
                 print('Failed to validate the "%s" header: "%s" does not match "%s"' %
@@ -143,6 +148,11 @@ class Endpoint(object):
         return True
 
     def _check_body(self, value, rule, property_path):
+        if isinstance(value, six.string_types):
+            value = Template(value).render(
+                read_config=docker_helper.read_configuration
+            )
+
         if isinstance(rule, dict) and isinstance(value, dict):
             if not self._accept_body(value, rule, property_path):
                 return False

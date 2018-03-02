@@ -44,6 +44,9 @@ class DockerAction(Action):
             if isinstance(value, dict):
                 current[key] = self._process_arguments(value.copy())
 
+            elif isinstance(value, list):
+                current[key] = [self._render_with_template(item) for item in value]
+
             elif isinstance(value, six.string_types):
                 current[key] = self._render_with_template(value)
 
