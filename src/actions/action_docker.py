@@ -41,13 +41,18 @@ class DockerAction(Action):
 
     def _process_arguments(self, current):
         for key, value in current.items():
-            if isinstance(value, dict):
-                current[key] = self._process_arguments(value.copy())
-
-            elif isinstance(value, list):
-                current[key] = [self._render_with_template(item) for item in value]
-
-            elif isinstance(value, six.string_types):
-                current[key] = self._render_with_template(value)
+            current[key] = self._process_value(value)
 
         return current
+
+    def _process_value(self, value):
+        if isinstance(value, dict):
+            return self._process_arguments(value.copy())
+
+        elif isinstance(value, list):
+            return [self._process_value(item) for item in value]
+
+        elif isinstance(value, six.string_types):
+            return self._render_with_template(value)
+
+        return value
