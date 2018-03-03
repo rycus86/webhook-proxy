@@ -121,13 +121,14 @@ class Endpoint(object):
     @staticmethod
     def _accept_headers(headers, rules):
         for key, rule in rules.items():
-            value = Template(headers.get(key, '')).render(
-                read_config=docker_helper.read_configuration
-            )
+            value = headers.get(key, '')
 
-            if not re.match(rule, value):
+            translated_rule = Template(rule).render(read_config=docker_helper.read_configuration)
+            translated_value = Template(value).render(read_config=docker_helper.read_configuration)
+
+            if not re.match(translated_rule, translated_value):
                 print('Failed to validate the "%s" header: "%s" does not match "%s"' %
-                      (key, value, rule))
+                      (key, translated_value, translated_rule))
                 return False
 
         return True
@@ -148,6 +149,11 @@ class Endpoint(object):
         return True
 
     def _check_body(self, value, rule, property_path):
+        if isinstance(rule, six.string_types):
+            rule = Template(rule).render(
+                read_config=docker_helper.read_configuration
+            )
+
         if isinstance(value, six.string_types):
             value = Template(value).render(
                 read_config=docker_helper.read_configuration

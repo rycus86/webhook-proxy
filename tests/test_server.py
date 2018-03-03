@@ -282,6 +282,39 @@ class ServerTest(unittest.TestCase):
         finally:
             sys.stdout = _stdout
 
+    def test_validation_with_templates(self):
+        unregister_metrics()
+
+        server = Server([
+            {
+                '/vars': {
+                    'headers': {
+                        'X-Test': '{{ ["templated", "header"]|join("-") }}'
+                    },
+                    'body': {
+                        'key': '{{ ["templated", "body"]|join("-") }}'
+                    }
+                }
+            }
+        ])
+
+        server.app.testing = True
+        client = server.app.test_client()
+
+        headers = {
+            'X-Test': 'templated-header'
+        }
+
+        body = {
+            'key': 'templated-body'
+        }
+
+        response = client.post('/vars',
+                               headers=headers, data=json.dumps(body),
+                               content_type='application/json')
+
+        self.assertEqual(200, response.status_code)
+
     def test_metrics(self):
         unregister_metrics()
 
