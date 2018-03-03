@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 import time
@@ -76,6 +77,26 @@ class ServerTest(unittest.TestCase):
                     'prop': '999'
                 }
             ]
+        }
+
+        self._check(200, headers, body)
+
+    def test_valid_request_with_templates(self):
+        def _delete_env_prop():
+            del os.environ['PROP_FROM_ENV']
+
+        os.environ['PROP_FROM_ENV'] = '123'
+        self.addCleanup(_delete_env_prop)
+
+        headers = {
+            'X-Sample': '{{ "AB001"|lower }}'
+        }
+
+        body = {
+            'key': 'value',
+            'item': {
+                'prop': '{{ read_config("PROP_FROM_ENV") }}'
+            }
         }
 
         self._check(200, headers, body)

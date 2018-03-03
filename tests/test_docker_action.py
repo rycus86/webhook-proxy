@@ -65,6 +65,19 @@ class DockerActionTest(ActionTestBase):
         finally:
             container.remove(force=True)
 
+    def test_arguments_with_variables(self):
+        output = self._invoke({'docker': {'$containers': {'$run': {
+            'image': 'alpine', 'command': 'env',
+            'remove': True, 'environment': [
+                'UPPER={{ "upper"|upper }}',
+                'LOWER={{ "LOWER"|lower }}'
+            ]}},
+            'output': '{{ result }}'}},
+            body={'incoming': {'pattern': 'testing_', 'status': {'value': 'running'}}})
+
+        self.assertIn('UPPER=UPPER', output)
+        self.assertIn('LOWER=lower', output)
+
     def test_images(self):
         output = self._invoke({'docker': {'$images': {'$list': {
             'filters': {'reference': 'alp*'}}}}})

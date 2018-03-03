@@ -38,7 +38,10 @@ jobs:
         - pip install -r requirements.txt
         - pip install -r docker-requirements.txt
         - PYTHONPATH=tests python -m unittest discover -s tests -v -p it_*.py
-      env:     DIND_VERSION=18.01
+      env:    DIND_VERSION=18.02
+
+    - <<: *integration-stage
+      env:    DIND_VERSION=18.01
 
     - <<: *integration-stage
       env:    DIND_VERSION=17.12

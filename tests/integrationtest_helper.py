@@ -106,7 +106,7 @@ class IntegrationTestBase(unittest.TestCase):
         for tag in images:
             image = cls.local_client.images.get(tag)
 
-            cls.remote_client.images.load(image.save().stream())
+            cls.remote_client.images.load(image.save())
 
             if ':' in tag:
                 name, tag = tag.split(':')
@@ -127,7 +127,9 @@ class IntegrationTestBase(unittest.TestCase):
     @classmethod
     def prepare_file(cls, filename, contents):
         cls.dind_container.exec_run(['mkdir', '-p', os.path.dirname('/tmp/%s' % filename)])
-        cls.dind_container.exec_run(['tee', '/tmp/%s' % filename], stdin=True, socket=True).sendall(contents)
+        cls.dind_container.exec_run(
+            ['tee', '/tmp/%s' % filename], stdin=True, socket=True
+        ).output.sendall(contents)
 
     @classmethod
     def request(cls, uri, **json):
