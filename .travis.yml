@@ -41,13 +41,7 @@ jobs:
       env:    DIND_VERSION=18.02
 
     - <<: *integration-stage
-      env:    DIND_VERSION=18.01
-
-    - <<: *integration-stage
       env:    DIND_VERSION=17.12
-
-    - <<: *integration-stage
-      env:    DIND_VERSION=17.10
 
     - <<: *integration-stage
       env:    DIND_VERSION=17.09
@@ -57,9 +51,6 @@ jobs:
 
     - <<: *integration-stage
       env:    DIND_VERSION=1.13
-
-    - <<: *integration-stage
-      env:    DIND_VERSION=1.12
 
     - &deploy-stage
       stage: deploy
