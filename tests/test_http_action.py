@@ -184,4 +184,4 @@ class HttpActionTest(ActionTestBase):
             fail_on_error=True
         )
 
-        self.assertEqual(output, 'HTTP::204')
+        self.assertIn('HTTP::204', output)
