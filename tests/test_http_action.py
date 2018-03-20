@@ -176,7 +176,6 @@ class HttpActionTest(ActionTestBase):
             error = stderr.dumps()
 
             self.assertIn('ActionInvocationException: HTTP call failed (HTTP 500)', error)
-            self.assertEqual('', output)
 
     def test_does_not_fail_on_success(self):
         output = self._invoke_http(
