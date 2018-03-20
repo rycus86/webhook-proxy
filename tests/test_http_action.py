@@ -8,7 +8,7 @@ if six.PY2:
 else:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from unittest_helper import ActionTestBase
+from unittest_helper import ActionTestBase, capture_stream
 
 
 class HttpActionTest(ActionTestBase):
@@ -84,6 +84,8 @@ class HttpActionTest(ActionTestBase):
         self.assertIsNotNone(port)
         self.assertGreater(port, 0)
 
+        expected_status_code = kwargs.pop('expected_status_code', 200)
+
         args = kwargs.copy()
 
         if 'target' not in args:
@@ -92,7 +94,7 @@ class HttpActionTest(ActionTestBase):
         elif args['target'].startswith('/'):
             args['target'] = 'http://127.0.0.1:%s%s' % (port, args['target'])
 
-        return self._invoke({'http': args})
+        return self._invoke({'http': args}, expected_status_code)
 
     def test_simple_http(self):
         output = self._invoke_http(
@@ -162,3 +164,25 @@ class HttpActionTest(ActionTestBase):
         output = self._invoke_http(headers={'X-Fail': '503'})
 
         self.assertIn('HTTP 503', output)
+
+    def test_fail_on_error(self):
+        with capture_stream('stderr') as stderr:
+            output = self._invoke_http(
+                headers={'X-Fail': '500'},
+                fail_on_error=True,
+                expected_status_code=500
+            )
+
+            error = stderr.dumps()
+
+            self.assertIn('ActionInvocationException: HTTP call failed (HTTP 500)', error)
+            self.assertEqual('', output)
+
+    def test_does_not_fail_on_success(self):
+        output = self._invoke_http(
+            headers={'X-Fail': '204'},
+            output='HTTP::{{ response.status_code }}',
+            fail_on_error=True
+        )
+
+        self.assertEqual(output, 'HTTP::204')

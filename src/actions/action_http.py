@@ -5,13 +5,14 @@ from actions import action, Action
 
 @action('http')
 class HttpAction(Action):
-    def __init__(self, target, method='POST', headers=None, body=None,
+    def __init__(self, target, method='POST', headers=None, body=None, fail_on_error=False,
                  output='HTTP {{ response.status_code }} : {{ response.content }}'):
 
         self.target = target
         self.method = method
         self.headers = headers
         self.body = body
+        self.fail_on_error = fail_on_error
         self.output_format = output
 
     def _run(self):
@@ -21,6 +22,9 @@ class HttpAction(Action):
             headers['Content-Length'] = str(len(self.body))
 
         response = requests.request(self.method, self.target, headers=headers, data=self._body)
+
+        if self.fail_on_error and response.status_code // 100 != 2:
+            self.error('HTTP call failed (HTTP %d)' % response.status_code)
 
         print(self._render_with_template(self.output_format, response=response))
 
