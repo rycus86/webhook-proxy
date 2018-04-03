@@ -14,6 +14,12 @@ class ActionInvocationException(Exception):
     pass
 
 
+class ReplayRequested(Exception):
+    def __init__(self, at):
+        super(ReplayRequested, self).__init__()
+        self.at = at
+
+
 def import_action_module(file_path):
     directory = os.environ.get('TMP_IMPORT_DIR', '/tmp')
 
@@ -64,3 +70,11 @@ def import_action_module(file_path):
 
         if os.path.exists(tmp_file_path):
             os.remove(tmp_file_path)
+
+
+class classproperty(property):
+    def __init__(self, fget):
+        super(classproperty, self).__init__(classmethod(fget))
+
+    def __get__(self, instance, owner):
+        return self.fget.__get__(None, owner)()

@@ -70,6 +70,7 @@ class ActionTestBase(unittest.TestCase):
         client = server.app.test_client()
 
         self._server = server
+        self._client = client
 
         with capture_stream() as sout:
             response = client.post('/testing',

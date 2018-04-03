@@ -110,7 +110,11 @@ class ServerTest(unittest.TestCase):
                         'actions': [
                             {
                                 'log': {
-                                    'message': 'Parameters: a={{ request.view_args["a"] }} b={{ request.view_args["b"] }} c={{ request.view_args["c"] }} x={{ request.view_args["x"] }} <'
+                                    'message': 'Parameters: '
+                                               'a={{ request.view_args["a"] }} '
+                                               'b={{ request.view_args["b"] }} '
+                                               'c={{ request.view_args["c"] }} '
+                                               'x={{ request.view_args["x"] }} <'
                                 }
                             }
                         ]

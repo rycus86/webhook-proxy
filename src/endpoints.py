@@ -11,11 +11,11 @@ from jinja2 import Template
 import docker_helper
 
 from actions import Action
-from util import ConfigurationException
+from util import ConfigurationException, classproperty
 
 
 class Endpoint(object):
-    current = None
+    _current = threading.local()
 
     def __init__(self, route, settings, action_metrics):
         if not route:
@@ -30,7 +30,7 @@ class Endpoint(object):
         self._headers = settings.get('headers', dict())
         self._body = settings.get('body', dict())
 
-        with Endpoint.on_setup(self):
+        with Endpoint.in_context(self):
             self._actions = list(Action.create(name, **(action_settings if action_settings else dict()))
                                  for action_item in settings.get('actions', list())
                                  for name, action_settings in action_item.items())
@@ -46,7 +46,7 @@ class Endpoint(object):
         return self._method
 
     @property
-    def async(self):
+    def is_async(self):
         return self._async
 
     @property
@@ -58,15 +58,19 @@ class Endpoint(object):
         return dict(self._body)
 
     @classmethod
-    def on_setup(cls, endpoint):
+    def in_context(cls, endpoint):
         class EndpointSetupContext(object):
             def __enter__(self):
-                cls.current = endpoint
+                cls._current.instance = endpoint
 
             def __exit__(self, *args, **kwargs):
-                cls.current = None
+                cls._current.instance = None
 
         return EndpointSetupContext()
+
+    @classproperty
+    def current(self):
+        return self._current.instance
 
     def setup(self, app):
         @app.route(self._route, endpoint=self._route[1:], methods=[self._method])
@@ -106,7 +110,8 @@ class Endpoint(object):
             setattr(request, '_cached_json', json)
 
             try:
-                self._run_actions()
+                with Endpoint.in_context(self):
+                    self._run_actions()
 
             except Exception:
                 traceback.print_exc()
