@@ -5,7 +5,7 @@ import time
 import unittest
 
 from server import Server, ConfigurationException
-from unittest_helper import unregister_metrics
+from unittest_helper import unregister_metrics, capture_stream
 
 
 class ServerTest(unittest.TestCase):
@@ -100,6 +100,36 @@ class ServerTest(unittest.TestCase):
         }
 
         self._check(200, headers, body)
+
+    def test_valid_request_with_view_args(self):
+        unregister_metrics()
+
+        self.server = Server([
+            {
+                    '/testing/<int:a>/<b>/<path:c>': {
+                        'actions': [
+                            {
+                                'log': {
+                                    'message': 'Parameters: a={{ request.view_args["a"] }} b={{ request.view_args["b"] }} c={{ request.view_args["c"] }} x={{ request.view_args["x"] }} <'
+                                }
+                            }
+                        ]
+                    }
+            }
+        ])
+
+        self.server.app.testing = True
+        self.client = self.server.app.test_client()
+
+        with capture_stream() as sout:
+            response = self.client.post('/testing/1/abc/def/ghi', data='{}', content_type='application/json')
+            self.assertEqual(200, response.status_code)
+
+            content = sout.dumps()
+            self.assertIn('a=1', content)
+            self.assertIn('b=abc', content)
+            self.assertIn('c=def/ghi', content)
+            self.assertIn('x= <', content)
 
     def test_invalid_headers(self):
         headers = {
