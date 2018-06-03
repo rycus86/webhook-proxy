@@ -63,7 +63,7 @@ jobs:
             --build-arg BUILD_TIMESTAMP=$(date +%s)   \
             -f $DOCKERFILE .
         - docker tag webhook-proxy:$DOCKER_TAG rycus86/webhook-proxy:$DOCKER_TAG
-        - docker login -u="rycus86" -p="$DOCKER_PASSWORD"
+        - echo ${DOCKER_PASSWORD} | docker login --username "rycus86" --password-stdin
       after_success:
         - docker push rycus86/webhook-proxy:$DOCKER_TAG
       env:
@@ -98,7 +98,7 @@ jobs:
     - stage: manifest
       if: branch = master
       script:
-        - docker login -u="rycus86" -p="${DOCKER_PASSWORD}"
+        - echo ${DOCKER_PASSWORD} | docker login --username "rycus86" --password-stdin
         - curl -fsSL https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64 > ./manifest-tool
         - chmod +x ./manifest-tool
         - ./manifest-tool push from-spec manifest.yml

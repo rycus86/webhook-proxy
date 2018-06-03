@@ -159,9 +159,12 @@ def action(name):
     return invoke
 
 
-_register_available_actions()
+def _safe_initialize_replays():
+    try:
+        _initialize_replays()
+    except Exception as ex:
+        print('Failed to initialize replays, the functionality won\'t be available! Cause: %s' % ex)
 
-try:
-    _initialize_replays()
-except:
-    pass  # FIXME handle not being able to open the replay database
+
+_register_available_actions()
+_safe_initialize_replays()

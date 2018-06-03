@@ -279,7 +279,7 @@ class ServerTest(unittest.TestCase):
                     'actions': [
                         {
                             'sleep': {
-                                'seconds': 0.5
+                                'seconds': 0.2
                             }
                         },
                         {

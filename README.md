@@ -33,7 +33,7 @@ server:
   port: '5000'
 
 endpoints:
-  - /endpoint/path
+  - /endpoint/path:
       method: 'POST'
 
       headers:
@@ -628,4 +628,3 @@ First a `docker` action checks that we already have containers running that
 use the image then another `docker` action pulls the updated image and
 finally the `docker-compose` action applies the changes by restarting
 any related containers.
-
