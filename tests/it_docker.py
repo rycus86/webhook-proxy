@@ -59,8 +59,7 @@ class DockerIntegrationTest(IntegrationTestBase):
 
         output = container.logs(stdout=True, stderr=False)
 
-        self.assertIn('- %s' % container.id, output)
-        self.assertEqual(len(output.strip().splitlines()), 1)
+        self.assertEqual(output.strip().splitlines()[-1], '- %s' % container.id)
 
     def test_run_container(self):
         self.prepare_images('alpine')
