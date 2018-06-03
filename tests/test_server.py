@@ -309,7 +309,7 @@ class ServerTest(unittest.TestCase):
 
             self.assertNotIn('Serving /testing with key=value', ''.join(_output))
 
-            time.sleep(1)
+            time.sleep(0.5)
 
             self.assertIn('Serving /testing with key=value', ''.join(_output))
 

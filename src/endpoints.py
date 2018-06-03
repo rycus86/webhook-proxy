@@ -83,7 +83,7 @@ class Endpoint(object):
                 return self._make_response(409, 'Invalid payload')
 
             if self._async:
-                args = (app, request.environ.copy(), request.json)
+                args = (app, request.environ.copy(), request.get_json())
 
                 threading.Thread(target=self._safe_run_actions, args=args).start()
 
@@ -107,7 +107,7 @@ class Endpoint(object):
     def _safe_run_actions(self, app, request_environment, json):
         with app.request_context(request_environment):
             # reassigning the JSON body of the request on a different thread
-            setattr(request, '_cached_json', json)
+            setattr(request, '_cached_json', (json, json))
 
             try:
                 with Endpoint.in_context(self):
