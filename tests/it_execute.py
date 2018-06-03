@@ -33,7 +33,7 @@ class ExecuteIntegrationTest(IntegrationTestBase):
 
         output = container.logs(stdout=True, stderr=False)
 
-        self.assertEqual(output.strip(), 'host=%s' % container.attrs['Config']['Hostname'])
+        self.assertIn('host=%s' % container.attrs['Config']['Hostname'], output.strip())
 
     def test_execute_base64(self):
         config = """

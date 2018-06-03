@@ -42,7 +42,7 @@ class DockerIntegrationTest(IntegrationTestBase):
                     $containers:
                       $list:
                         filters:
-                          ancestor: '{{ request.json.image }}'
+                          name: '{{ request.json.name }}'
                     output: |
                       {% for container in result %}
                       - {{ container.id }}
@@ -53,7 +53,7 @@ class DockerIntegrationTest(IntegrationTestBase):
 
         container = self.start_app_container('test-22.yml')
         
-        response = self.request('/docker/list', image='webhook-testing')
+        response = self.request('/docker/list', name=container.name)
 
         self.assertEqual(response.status_code, 200)
 
