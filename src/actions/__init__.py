@@ -160,4 +160,8 @@ def action(name):
 
 
 _register_available_actions()
-_initialize_replays()
+
+try:
+    _initialize_replays()
+except:
+    pass  # FIXME handle not being able to open the replay database
