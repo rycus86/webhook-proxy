@@ -68,32 +68,32 @@ jobs:
         - docker push rycus86/webhook-proxy:$DOCKER_TAG
       env:
         - DOCKER_TAG=amd64
-        - DOCKERFILE=Dockerfile
+        - BASE_IMAGE=alpine
 
     - <<: *deploy-stage
       env:
         - DOCKER_TAG=armhf
-        - DOCKERFILE=Dockerfile.armhf
+        - BASE_IMAGE=rycus86/armhf-alpine-qemu
 
     - <<: *deploy-stage
       env:
         - DOCKER_TAG=aarch64
-        - DOCKERFILE=Dockerfile.aarch64
+        - BASE_IMAGE=rycus86/arm64v8-alpine-qemu
 
     - <<: *deploy-stage
       env: 
         - DOCKER_TAG=amd64-docker
-        - DOCKERFILE=Dockerfile-docker
+        - BASE_IMAGE=alpine
 
     - <<: *deploy-stage
       env:
         - DOCKER_TAG=armhf-docker
-        - DOCKERFILE=Dockerfile-docker.armhf
+        - BASE_IMAGE=rycus86/armhf-alpine-qemu
 
     - <<: *deploy-stage
       env:
         - DOCKER_TAG=aarch64-docker
-        - DOCKERFILE=Dockerfile-docker.aarch64
+        - BASE_IMAGE=rycus86/arm64v8-alpine-qemu
 
     - stage: manifest
       if: branch = master

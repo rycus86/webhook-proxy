@@ -8,7 +8,7 @@ from unittest_helper import ActionTestBase
 
 
 class DockerActionTest(ActionTestBase):
-    client = docker.DockerClient()
+    client = docker.from_env()
 
     @classmethod
     def setUpClass(cls):

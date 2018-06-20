@@ -9,7 +9,7 @@ from util import ConfigurationException
 
 @action('docker')
 class DockerAction(Action):
-    client = docker.DockerClient(version='auto')
+    client = docker.from_env(version='auto')
 
     def __init__(self, output='{{ result }}', **invocations):
         if len(invocations) != 1:
