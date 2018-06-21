@@ -62,6 +62,7 @@ jobs:
             --build-arg BASE_IMAGE=$BASE_IMAGE        \
             --build-arg GIT_COMMIT=$TRAVIS_COMMIT     \
             --build-arg BUILD_TIMESTAMP=$(date +%s)   \
+            -f Dockerfile${FLAVOR}                    \
             .
         - docker tag webhook-proxy:$DOCKER_TAG rycus86/webhook-proxy:$DOCKER_TAG
         - echo ${DOCKER_PASSWORD} | docker login --username "rycus86" --password-stdin
@@ -83,16 +84,19 @@ jobs:
 
     - <<: *deploy-stage
       env: 
+        - FLAVOR=docker
         - DOCKER_TAG=amd64-docker
         - BASE_IMAGE=alpine
 
     - <<: *deploy-stage
       env:
+        - FLAVOR=docker
         - DOCKER_TAG=armhf-docker
         - BASE_IMAGE=rycus86/armhf-alpine-qemu
 
     - <<: *deploy-stage
       env:
+        - FLAVOR=docker
         - DOCKER_TAG=aarch64-docker
         - BASE_IMAGE=rycus86/arm64v8-alpine-qemu
 
