@@ -84,19 +84,19 @@ jobs:
 
     - <<: *deploy-stage
       env: 
-        - FLAVOR=docker
+        - FLAVOR=-docker
         - DOCKER_TAG=amd64-docker
         - BASE_IMAGE=alpine
 
     - <<: *deploy-stage
       env:
-        - FLAVOR=docker
+        - FLAVOR=-docker
         - DOCKER_TAG=armhf-docker
         - BASE_IMAGE=rycus86/armhf-alpine-qemu
 
     - <<: *deploy-stage
       env:
-        - FLAVOR=docker
+        - FLAVOR=-docker
         - DOCKER_TAG=aarch64-docker
         - BASE_IMAGE=rycus86/arm64v8-alpine-qemu
 
