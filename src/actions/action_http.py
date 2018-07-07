@@ -1,3 +1,4 @@
+import json
 import requests
 
 from actions import action, Action
@@ -5,13 +6,14 @@ from actions import action, Action
 
 @action('http')
 class HttpAction(Action):
-    def __init__(self, target, method='POST', headers=None, body=None, fail_on_error=False,
+    def __init__(self, target, method='POST', headers=None, body=None, json=False, fail_on_error=False,
                  output='HTTP {{ response.status_code }} : {{ response.content }}'):
 
         self.target = target
         self.method = method
         self.headers = headers
         self.body = body
+        self.json = json
         self.fail_on_error = fail_on_error
         self.output_format = output
 
@@ -41,7 +43,21 @@ class HttpAction(Action):
     @property
     def _body(self):
         if self.body:
-            return self._render_with_template(self.body)
-
+            if self.json:
+                return self._render_json(self.body)
+            else:
+                return self._render_with_template(self.body)
         else:
             return self.body
+
+    def _render_json(self, body):
+        return json.dumps(self._render_dict(body))
+
+    def _render_dict(self, a_dict):
+        rendered = {}
+        for key, value in a_dict.items():
+            if type(value) == dict:
+                rendered[key] = self._render_dict(value)
+            else:
+                rendered[key] = self._render_with_template(value).strip()
+        return rendered
