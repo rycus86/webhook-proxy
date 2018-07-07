@@ -140,6 +140,13 @@ class HttpActionTest(ActionTestBase):
 
         self.assertIn('B original={"request": {"path": "/testing"}}', output)
 
+    def test_json_output_with_replacement(self):
+        output = self._invoke_http(
+            json=True,
+            body={'original': {'request': {'path': '{{ request.path }}'}}})
+
+        self.assertIn('B original={"request": {"path": "/testing"}}', output)
+
     def test_output_formatting(self):
         output = self._invoke_http(
             output='HTTP::{{ response.status_code }}')
