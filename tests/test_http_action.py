@@ -128,6 +128,12 @@ class HttpActionTest(ActionTestBase):
         self.assertIn('H accept=text/plain', output)
         self.assertIn('H x-test=test_get_method', output)
 
+    def test_target_replacement(self):
+        output = self._invoke_http(
+                target='/some/{{ "remote" }}/endpoint')
+
+        self.assertIn('uri=/some/remote/endpoint', output)
+
     def test_header_replacement(self):
         output = self._invoke_http(
             headers={'X-Original-Path': '{{ request.path }}'})
