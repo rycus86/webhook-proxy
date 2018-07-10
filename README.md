@@ -172,7 +172,7 @@ _Jinja2_ template as `response`.
 | target  | The target endpoint as `<scheme>://<host>[:<port>][/<path>]`                        |    | no  | yes |
 | method  | The HTTP method to use for the request                                              | `POST`  | no  | no  |
 | headers | The HTTP headers (as dictionary) to add to the request                              | `empty` | yes | no  |
-| json    | whether to dump `body` YAML subtree as json                                         | `False` | no  | no  |
+| json    | Whether to dump `body` YAML subtree as json                                         | `False` | no  | no  |
 | body    | The HTTP body to send with the request. String (or YAML tree, if `json` is `True`)  | `empty` | yes | no  |
 | output  | Output template for printing the response on the standard output                    | `HTTP {{ response.status_code }} : {{ response.content }}` | yes | no |
 

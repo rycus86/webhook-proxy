@@ -55,13 +55,16 @@ class HttpAction(Action):
             return self.body
 
     def _render_json(self, body):
-        return json.dumps(self._render_dict(body))
+        return json.dumps(self._render_json_item(body))
 
-    def _render_dict(self, a_dict):
+    def _render_json_item(self, item):
+        if isinstance(item, list):
+            return [self._render_json_item(x) for x in item]
+
         rendered = {}
-        for key, value in a_dict.items():
-            if type(value) == dict:
-                rendered[key] = self._render_dict(value)
+        for key, value in item.items():
+            if isinstance(value, dict):
+                rendered[key] = self._render_json_item(value)
             else:
                 rendered[key] = self._render_with_template(value).strip()
         return rendered

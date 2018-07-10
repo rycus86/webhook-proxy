@@ -61,12 +61,21 @@ class HttpActionTest(ActionTestBase):
                 for key, value in self.headers.items():
                     self.wfile.write(six.b('H %s=%s\n' % (key.lower(), value)))
 
-                for key, value in posted.items():
-                    if isinstance(value, dict):
-                        self.wfile.write(six.b('B %s=%s' % (key, json.dumps(value))))
+                if isinstance(posted, dict):
+                    for key, value in posted.items():
+                        if isinstance(value, dict):
+                            self.wfile.write(six.b('B %s=%s\n' % (key, json.dumps(value))))
 
-                    else:
-                        self.wfile.write(six.b('B %s=%s\n' % (key, value)))
+                        else:
+                            self.wfile.write(six.b('B %s=%s\n' % (key, value)))
+
+                elif isinstance(posted, list):
+                    for value in posted:
+                        if isinstance(value, dict):
+                            self.wfile.write(six.b('AR %s\n' % json.dumps(value)))
+
+                        else:
+                            self.wfile.write(six.b('AR %s\n' % value))
 
         self.http_server = HTTPServer(('127.0.0.1', 0), Handler)
 
@@ -152,6 +161,14 @@ class HttpActionTest(ActionTestBase):
             body={'original': {'request': {'path': '{{ request.path }}'}}})
 
         self.assertIn('B original={"request": {"path": "/testing"}}', output)
+
+    def test_json_output_with_array(self):
+        output = self._invoke_http(
+            json=True,
+            body=[{'path': '{{ request.path }}'}, {'method': '{{ request.method }}'}])
+
+        self.assertIn('AR {"path": "/testing"}', output)
+        self.assertIn('AR {"method": "POST"}', output)
 
     def test_output_formatting(self):
         output = self._invoke_http(
