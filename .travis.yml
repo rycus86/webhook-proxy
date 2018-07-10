@@ -54,7 +54,7 @@ jobs:
 
     - &deploy-stage
       stage: deploy
-      if: branch = master
+      if: branch = master AND type = push
       script:
         - docker run --rm --privileged multiarch/qemu-user-static:register --reset
         - |
@@ -101,7 +101,7 @@ jobs:
         - BASE_IMAGE=rycus86/arm64v8-alpine-qemu
 
     - stage: manifest
-      if: branch = master
+      if: branch = master AND type = push
       script:
         - echo ${DOCKER_PASSWORD} | docker login --username "rycus86" --password-stdin
         - curl -fsSL https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64 > ./manifest-tool
