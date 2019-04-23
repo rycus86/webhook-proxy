@@ -71,7 +71,7 @@ class MetricsActionTest(ActionTestBase):
         )}})
 
         self.assertEqual(output, 'Tracking metrics: test_counter')
-        self.assertIn('test_counter 1.0', self.metrics())
+        self.assertIn('test_counter_total 1.0', self.metrics())
 
         unregister_metrics()
 
@@ -81,7 +81,7 @@ class MetricsActionTest(ActionTestBase):
         )}})
 
         self.assertEqual(output, 'Tracking metrics: test_counter_with_labels')
-        self.assertIn('test_counter_with_labels{code="200"} 1.0', self.metrics())
+        self.assertIn('test_counter_with_labels_total{code="200"} 1.0', self.metrics())
 
     def test_multiple_endpoints(self):
         unregister_metrics()
@@ -119,23 +119,23 @@ class MetricsActionTest(ActionTestBase):
         client.post('/one', headers={'Content-Type': 'application/json'},
                     data='{"test":"1"}', content_type='application/json')
 
-        self.assertIn('metric_one 1.0', self.metrics())
-        self.assertIn('metric_two 0.0', self.metrics())
-        self.assertIn('metric_xyz 0.0', self.metrics())
+        self.assertIn('metric_one_total 1.0', self.metrics())
+        self.assertIn('metric_two_total 0.0', self.metrics())
+        self.assertIn('metric_xyz_total 0.0', self.metrics())
 
         client.post('/one', headers={'Content-Type': 'application/json'},
                     data='{"test":"2"}', content_type='application/json')
 
-        self.assertIn('metric_one 2.0', self.metrics())
-        self.assertIn('metric_two 0.0', self.metrics())
-        self.assertIn('metric_xyz 0.0', self.metrics())
+        self.assertIn('metric_one_total 2.0', self.metrics())
+        self.assertIn('metric_two_total 0.0', self.metrics())
+        self.assertIn('metric_xyz_total 0.0', self.metrics())
 
         client.post('/two', headers={'Content-Type': 'application/json'},
                     data='{"test":"3"}', content_type='application/json')
 
-        self.assertIn('metric_one 2.0', self.metrics())
-        self.assertIn('metric_two 1.0', self.metrics())
-        self.assertIn('metric_xyz 1.0', self.metrics())
+        self.assertIn('metric_one_total 2.0', self.metrics())
+        self.assertIn('metric_two_total 1.0', self.metrics())
+        self.assertIn('metric_xyz_total 1.0', self.metrics())
 
     def test_invalid_metric(self):
         self.assertRaises(ConfigurationException, self._invoke, {'metrics': {'unknown': {}}})
