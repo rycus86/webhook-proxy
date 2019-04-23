@@ -165,10 +165,16 @@ class HttpActionTest(ActionTestBase):
     def test_json_output_with_array(self):
         output = self._invoke_http(
             json=True,
-            body=[{'path': '{{ request.path }}'}, {'method': '{{ request.method }}'}])
+            body=[
+                {'path': '{{ request.path }}'},
+                {'method': '{{ request.method }}'},
+                {'options': ['a', 'list']}
+            ]
+        )
 
         self.assertIn('AR {"path": "/testing"}', output)
         self.assertIn('AR {"method": "POST"}', output)
+        self.assertIn('AR {"options": ["a", "list"]}', output)
 
     def test_output_formatting(self):
         output = self._invoke_http(
