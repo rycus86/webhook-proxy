@@ -175,6 +175,7 @@ _Jinja2_ template as `response`.
 | json    | Whether to dump `body` YAML subtree as json                                         | `False` | no  | no  |
 | body    | The HTTP body to send with the request. String (or YAML tree, if `json` is `True`)  | `empty` | yes | no  |
 | output  | Output template for printing the response on the standard output                    | `HTTP {{ response.status_code }} : {{ response.content }}` | yes | no |
+| verify | SSL certificate check behavior, set to `False` to ignore certificate errors (not recomended) or provide path to custom CA | `True` | no | no
 
 #### github-verify
 

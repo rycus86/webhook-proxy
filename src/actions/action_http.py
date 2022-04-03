@@ -7,7 +7,7 @@ from actions import action, Action
 @action('http')
 class HttpAction(Action):
     def __init__(self, target, method='POST', headers=None, body=None, json=False, fail_on_error=False,
-                 output='HTTP {{ response.status_code }} : {{ response.content }}'):
+                 output='HTTP {{ response.status_code }} : {{ response.content }}', verify=True):
 
         self.target = target
         self.method = method
@@ -16,6 +16,7 @@ class HttpAction(Action):
         self.json = json
         self.fail_on_error = fail_on_error
         self.output_format = output
+        self.verify = verify
 
     def _run(self):
         headers = self._headers.copy()
@@ -23,13 +24,13 @@ class HttpAction(Action):
         if self.body and 'Content-Length' not in headers:
             headers['Content-Length'] = str(len(self.body))
 
-        response = requests.request(self.method, self._target, headers=headers, data=self._body)
+        response = requests.request(self.method, self._target, headers=headers, data=self._body, verify=self.verify)
 
         if self.fail_on_error and response.status_code // 100 != 2:
             self.error('HTTP call failed (HTTP %d)' % response.status_code)
 
         print(self._render_with_template(self.output_format, response=response))
-
+        
     @property
     def _target(self):
         return self._render_with_template(self.target)
