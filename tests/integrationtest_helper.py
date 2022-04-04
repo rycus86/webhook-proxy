@@ -41,12 +41,13 @@ class IntegrationTestBase(unittest.TestCase):
     @classmethod
     def start_dind_container(cls):
         container = cls.local_client.containers.run('docker:%s-dind' % cls.DIND_VERSION,
+                                                    command='dockerd --tls=false --host="tcp://0.0.0.0:2375"',
                                                     name='webhook-dind-%s' % int(time.time()),
                                                     ports={'2375': None, '9002': '9003'},
                                                     privileged=True, detach=True)
 
         try:
-            for _ in range(10):
+            for _ in range(50):
                 container.reload()
 
                 if container.status == 'running':
@@ -57,7 +58,7 @@ class IntegrationTestBase(unittest.TestCase):
 
             port = cls.dind_port(container)
 
-            for _ in range(25):
+            for _ in range(50):
                 try:
                     response = requests.get('http://%s:%s/version' % (cls.DIND_HOST, port))
                     if response and response.status_code == 200:

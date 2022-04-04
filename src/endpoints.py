@@ -7,6 +7,7 @@ import traceback
 import six
 from flask import request
 from jinja2 import Template
+from werkzeug.exceptions import BadRequest
 
 import docker_helper
 
@@ -75,7 +76,7 @@ class Endpoint(object):
     def setup(self, app):
         @app.route(self._route, endpoint=self._route[1:], methods=[self._method])
         def receive(**kwargs):
-            if not request.json:
+            if not self._json_body:
                 if self._body:
                     return self._make_response(400, 'No payload')
 
@@ -121,7 +122,14 @@ class Endpoint(object):
         return message, status, {'Content-Type': 'text/plain'}
 
     def accept(self):
-        return self._accept_headers(request.headers, self._headers) and self._accept_body(request.json, self._body)
+        return self._accept_headers(request.headers, self._headers) and self._accept_body(self._json_body, self._body)
+
+    @property
+    def _json_body(self):
+        try:
+            return request.json
+        except BadRequest:
+            return dict()
 
     @staticmethod
     def _accept_headers(headers, rules):
